@@ -161,36 +161,31 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: Color.fromARGB(255, 9, 126, 139),
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _areas.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 8,
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              _areas[index],
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            trailing: const Icon(Icons.arrow_forward_ios),
-                            onTap: () {
-                              // TODO: Handle navigation to specific area
-                              print('Selected area: ${_areas[index]}');
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  ...List.generate(_areas.length, (index) {
+                    return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          _areas[index],
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          // TODO: Handle navigation to specific area
+                          print('Selected area: ${_areas[index]}');
+                        },
+                      ),
+                    );
+                  }),
                 ],
               ],
             ),
