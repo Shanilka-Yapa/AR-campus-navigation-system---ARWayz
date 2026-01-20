@@ -145,8 +145,16 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.circular(20), //round corners
                           borderSide: BorderSide.none, //remove the default border
                         ),
+                        prefixIcon: Icon(Icons.location_city, color: Color(0xFF1A2D33)),
                         label: Center(
-                          child: Text('Building ID'),
+                          child:
+                          Text(
+                              'Building ID',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A2D33),
+                                fontSize: 20,
+                              )),
                         ),
                         hintText: 'Enter the building ID',
                       ),
@@ -154,28 +162,35 @@ class _MyHomePageState extends State<MyHomePage> {
                       textCapitalization: TextCapitalization.characters,
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: _onSubmit,
+                      icon: Icon(
+                        Icons.send, // Example icon
+                        color: Colors.white, // Icon color
+                      ),
+                      label: Text(
+                        'Submit',
+                        style: TextStyle(
+                          color: Colors.white, // Text color
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF1A2D33), // Button background color
+                        foregroundColor: Colors.white,       // Default color for text & icon (optional, already set above)
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,
                         ),
-                      ),
-                      child: const Text('Submit'),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _openCamera,
-                      icon: const Icon(Icons.qr_code_scanner, color: Colors.black),
-                      label: const Text(
-                        'Scan QR Code',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20), // Rounded corners
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _openCamera,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         elevation: 6,
@@ -187,7 +202,24 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,       // Row only takes the space it needs
+                        mainAxisAlignment: MainAxisAlignment.center, // Centers content
+                        children: const [
+                          Icon(Icons.qr_code_scanner, color: Color(0xFF1A2D33)), // Icon at start
+                          SizedBox(width: 10),                                   // Space between icon and text
+                          Text(
+                            'Scan QR Code',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+
                     if (_showList) ...[
                       const SizedBox(height: 32),
                       const Text(
