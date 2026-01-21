@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Building 1 - B001</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #eef2f3, #d9e4f5);
+            color: #333;
+        }
+
+        /* ===== Header ===== */
+        header {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 32px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        /* ===== Floor Title ===== */
+        .floor-title {
+            margin: 50px 5% 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .floor-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* ===== Grid ===== */
+        .container {
+            width: 90%;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            padding-bottom: 30px;
+        }
+
+        /* ===== Card ===== */
+        .room-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            transition: transform 0.4s, box-shadow 0.4s;
+            cursor: pointer;
+        }
+
+        .room-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .room-card img {
+            width: 100%;
+            height: 190px;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .room-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .room-info {
+            padding: 18px;
+        }
+
+        .room-info h3 {
+            margin: 0 0 6px;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .room-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* ===== Footer space ===== */
+        .spacer {
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Building 1 – B001</h1>
+    <p>Room & Facility Overview</p>
+</header>
+
+<!-- ===== Ground Floor ===== -->
+<div class="floor-title">
+    <span class="floor-badge">G</span>
+    Ground Floor
+</div>
+
+<div class="container">
+
+    <div class="room-card">
+        <img src="Building001_images/canteen1.jpg" alt="Canteen 1">
+        <div class="room-info">
+            <h3>Canteen 1</h3>
+            <p>Main food area</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/canteen2.jpg" alt="Canteen 2">
+        <div class="room-info">
+            <h3>Canteen 2</h3>
+            <p>Dining area</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/washroom.jpg" alt="Washroom">
+        <div class="room-info">
+            <h3>Washroom</h3>
+            <p>Public washroom facilities</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== First Floor ===== -->
+<div class="floor-title">
+    <span class="floor-badge">1st</span>
+    First Floor
+</div>
+
+<div class="container">
+
+    <div class="room-card">
+        <img src="Building001_images/bookshop.jpg" alt="Bookshop">
+        <div class="room-info">
+            <h3>Faculty Bookshop</h3>
+            <p>Books & accessories</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/artroom.jpg" alt="Art Room">
+        <div class="room-info">
+            <h3>Art Room</h3>
+            <p>Engineers meet arts</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/carromroom.jpg" alt="Carrom Room">
+        <div class="room-info">
+            <h3>Carrom Room</h3>
+            <p>Relax & games</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/gym.jpg" alt="Gym">
+        <div class="room-info">
+            <h3>Gym</h3>
+            <p>Fitness & wellness</p>
+        </div>
+    </div>
+
+    <div class="room-card">
+        <img src="Building001_images/studyroom.jpg" alt="Study Room">
+        <div class="room-info">
+            <h3>Study Room</h3>
+            <p>Academic purpose</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="spacer"></div>
+
+</body>
+</html>
