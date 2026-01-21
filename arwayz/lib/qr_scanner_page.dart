@@ -15,6 +15,46 @@ class _QRScannerPageState extends State<QRScannerPage> {
   String scannedCode = "";
   bool hasScanned = false;
 
+  /// Helper: Clean and prepare QR code for opening
+  String _prepareUrl(String code) {
+    String urlString = code.trim().replaceAll('\n', '').replaceAll('\r', '');
+
+    // Check if it looks like a URL, if not prepend https://
+    if (!urlString.startsWith(RegExp(r'https?://'))) {
+      urlString = 'https://$urlString';
+    }
+    return urlString;
+  }
+
+  Future<void> _openUrl(String code) async {
+    final urlString = _prepareUrl(code);
+
+    try {
+      final Uri url = Uri.parse(urlString);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        // Show dialog for invalid URL
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Cannot open link'),
+            content: Text('Scanned QR code is not a valid URL:\n$urlString'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening link: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,8 +67,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
             child: MobileScanner(
               onDetect: (capture) {
                 final barcode = capture.barcodes.first;
-                final code = barcode.rawValue;
-                if (code != null && scannedCode != code) {
+                final code = barcode.rawValue ?? "";
+                if (code.isNotEmpty && scannedCode != code) {
                   setState(() {
                     scannedCode = code;
                     hasScanned = true;
@@ -65,24 +105,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                           children: [
                             // Open in browser
                             ElevatedButton.icon(
-                              onPressed: () async {
-                                String urlString = scannedCode;
-                                if (!urlString.startsWith('http://') &&
-                                    !urlString.startsWith('https://')) {
-                                  urlString = 'https://$urlString';
-                                }
-                                final Uri url = Uri.parse(urlString);
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(url,
-                                      mode: LaunchMode.externalApplication);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            'Cannot open URL: $scannedCode')),
-                                  );
-                                }
-                              },
+                              onPressed: () => _openUrl(scannedCode),
                               icon: const Icon(Icons.open_in_browser),
                               label: const Text('Open'),
                             ),
