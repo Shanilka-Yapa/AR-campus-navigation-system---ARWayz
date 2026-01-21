@@ -5,7 +5,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
-
+// changes on the frontend 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
