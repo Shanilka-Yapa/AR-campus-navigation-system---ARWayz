@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
 import 'splash_page.dart';
+import 'ar_camera_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,7 +98,23 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
+          //Camera open for AR
+          Positioned(
+            bottom: 30,
+            right: 20,
+            child: FloatingActionButton(
+              backgroundColor: const Color(0xFF1A2D33),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ARCameraPage(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.camera_alt, color: Colors.white),
+            ),
+          ),
           //Back button
           Positioned(
             top: 40, //adjust for status bar
