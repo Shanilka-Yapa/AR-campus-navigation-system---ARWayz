@@ -155,3 +155,28 @@ longitude: 80.19075
   * User scans QR code
   * App fetches POI data using `qrCodeId`
 
+ ---
+
+## 8. Current Status
+
+* Firebase backend successfully created
+* Firestore database implemented
+* One building and one POI added as sample data
+* Application integration planned for next phase
+
+---
+
+## 9. Future Improvements
+
+* Add more buildings and POIs
+* Implement Firebase Authentication
+* Integrate database with Flutter AR application
+* Add indoor path mapping
+
+---
+
+## 10. Conclusion
+
+This backend implementation demonstrates a scalable and structured Firebase Firestore database suitable for an AR-based campus navigation system supporting both indoor and outdoor navigation.
+
+
