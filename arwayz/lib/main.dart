@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'qr_scanner_page.dart';
+import 'package:flutter/services.dart';
+import 'splash_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'ARWayz'),
+      home: const SplashPage(),
     );
   }
 }
@@ -100,21 +102,18 @@ class _MyHomePageState extends State<MyHomePage> {
             top: 40, //adjust for status bar
             left: 16,
             child: GestureDetector(
-              onTap: (){
-                setState(() {
-                  _showList = false;
-                  _buildingIdController.clear();
-                });
+              onTap: () {
+                SystemNavigator.pop(); // <- This exits the app
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),//circle background
+                  color: Colors.white.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(8),
                 child: const Icon(Icons.arrow_back, color: Colors.black),
               ),
-            )
+            ),
           ),
 
           /* Dark overlay
