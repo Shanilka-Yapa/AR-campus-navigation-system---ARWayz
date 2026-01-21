@@ -4,6 +4,7 @@ import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
 import 'splash_page.dart';
 import 'ar_camera_page.dart';
+import 'building_areas_page.dart';
 
 
 void main() async {
@@ -41,24 +42,26 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _buildingIdController = TextEditingController();
-  bool _showList = false;
-
-  final List<String> _areas = [
-    'Dining area 01',
-    'Dining area 02',
-    'Bookshop',
-    'Study area 01',
-    'Carrom room',
-    'Art room',
-    'Gym',
-    'Washroom',
-  ];
 
   void _onSubmit() {
     final buildingId = _buildingIdController.text.trim();
-    setState(() {
-      _showList = buildingId.toUpperCase() == 'B001';
-    });
+
+    if (buildingId.toUpperCase() == 'B001') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BuildingAreasPage(
+            buildingId: buildingId,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid Building ID'),
+        ),
+      );
+    }
   }
 
   @override
@@ -157,21 +160,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20), //round corners
-                          borderSide: BorderSide.none, //remove the default border
+                          borderRadius: BorderRadius.circular(20), // round corners
+                          borderSide: BorderSide.none, // remove default border
                         ),
                         prefixIcon: Icon(Icons.location_city, color: Color(0xFF1A2D33)),
-                        label: Center(
-                          child:
-                          Text(
-                              'Building ID',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A2D33),
-                                fontSize: 20,
-                              )),
+                        hintText: 'Enter Building ID', // only hint
+                        hintStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
                         ),
-                        hintText: 'Enter the building ID',
                       ),
                       keyboardType: TextInputType.text,
                       textCapitalization: TextCapitalization.characters,
@@ -234,40 +231,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       ),
                     ),
-
-                    if (_showList) ...[
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Main Cafeteria',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ...List.generate(_areas.length, (index) {
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 8,
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              _areas[index],
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            trailing:
-                            const Icon(Icons.arrow_forward_ios),
-                            onTap: () {
-                              print('Selected area: ${_areas[index]}');
-                            },
-                          ),
-                        );
-                      }),
-                    ],
                   ],
                 ),
               ),
