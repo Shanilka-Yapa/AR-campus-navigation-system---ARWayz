@@ -14,11 +14,10 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   late GoogleMapController mapController;
 
   // University of Ruhuna, Faculty of Engineering coordinates
-  // (You need to update with exact coordinates)
   static const LatLng DESTINATION = LatLng(
-    6.9271,
-    80.7789,
-  ); // Example coordinates
+    6.0793684,
+    80.1919646,
+  ); // Faculty of Engineering, Galle
   LatLng? _currentLocation;
 
   Set<Marker> markers = {};
