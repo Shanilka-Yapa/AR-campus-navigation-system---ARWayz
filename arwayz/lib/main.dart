@@ -6,6 +6,7 @@ import 'splash_page.dart';
 import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
+import 'google_map_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _buildingIdController = TextEditingController();
 
+  final ImagePicker _picker = ImagePicker();
+
   void _onSubmit() {
     final buildingId = _buildingIdController.text.trim();
 
@@ -60,14 +63,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  @override
-  void dispose() {
-    _buildingIdController.dispose();
-    super.dispose();
-  }
-
-  final ImagePicker _picker = ImagePicker();
-
   Future<void> _openCamera() async {
     final result = await Navigator.push(
       context,
@@ -76,8 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (result != null) {
       print("Got QR code: $result");
-      // You can handle the scanned code here
     }
+  }
+
+  @override
+  void dispose() {
+    _buildingIdController.dispose();
+    super.dispose();
   }
 
   @override
@@ -95,49 +95,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          //Camera open for AR
+
+          // Back button
           Positioned(
-            bottom: 30,
-            right: 20,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  backgroundColor: const Color(0xFF1A2D33),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const OutdoorNavigationPage(),
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.navigation, color: Colors.white),
-                  tooltip: 'Navigate to University',
-                ),
-                const SizedBox(height: 12),
-                FloatingActionButton(
-                  backgroundColor: const Color(0xFF1A2D33),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ARCameraPage(),
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.camera_alt, color: Colors.white),
-                  tooltip: 'Open Camera',
-                ),
-              ],
-            ),
-          ),
-          //Back button
-          Positioned(
-            top: 40, //adjust for status bar
+            top: 40,
             left: 16,
             child: GestureDetector(
               onTap: () {
-                SystemNavigator.pop(); // <- This exits the app
+                SystemNavigator.pop();
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -149,11 +114,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
-          /* Dark overlay
-          Container(
-            color: Colors.black.withOpacity(0.45),
-          ),*/
 
           // Foreground content
           Center(
@@ -172,16 +132,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // round corners
-                          borderSide: BorderSide.none, // remove default border
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
                         ),
                         prefixIcon: Icon(
                           Icons.location_city,
                           color: Color(0xFF1A2D33),
                         ),
-                        hintText: 'Enter Building ID', // only hint
+                        hintText: 'Enter Building ID',
                         hintStyle: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
@@ -193,32 +151,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: _onSubmit,
-                      icon: Icon(
-                        Icons.send, // Example icon
-                        color: Colors.white, // Icon color
-                      ),
-                      label: Text(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      label: const Text(
                         'Submit',
                         style: TextStyle(
-                          color: Colors.white, // Text color
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(
-                          0xFF1A2D33,
-                        ), // Button background color
-                        foregroundColor: Colors
-                            .white, // Default color for text & icon (optional, already set above)
+                        backgroundColor: const Color(0xFF1A2D33),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // Rounded corners
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                     ),
@@ -237,16 +186,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize
-                            .min, // Row only takes the space it needs
-                        mainAxisAlignment:
-                            MainAxisAlignment.center, // Centers content
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(
                             Icons.qr_code_scanner,
                             color: Color(0xFF1A2D33),
-                          ), // Icon at start
-                          SizedBox(width: 10), // Space between icon and text
+                          ),
+                          SizedBox(width: 10),
                           Text(
                             'Scan QR Code',
                             style: TextStyle(
@@ -261,6 +208,99 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
               ),
+            ),
+          ),
+
+          // Bottom icons with white background
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Navigation
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OutdoorNavigationPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(Icons.navigation,
+                        color: Color(0xFF1A2D33), size: 28),
+                  ),
+                ),
+                // AR Camera
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ARCameraPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(Icons.camera_alt,
+                        color: Color(0xFF1A2D33), size: 28),
+                  ),
+                ),
+                // Map
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GoogleMapPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child:
+                        const Icon(Icons.map, color: Color(0xFF1A2D33), size: 28),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
