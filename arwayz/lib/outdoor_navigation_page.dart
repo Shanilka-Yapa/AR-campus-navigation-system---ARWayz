@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
+
+import 'models/location_model.dart';
+import 'helpers/ar_navigation_helper.dart';
+import 'pages/ar_camera_navigation_page.dart';
+import 'pages/test_ar_page.dart';
+import 'widgets/faculty_location_card.dart';
 
 class OutdoorNavigationPage extends StatefulWidget {
   const OutdoorNavigationPage({super.key});
@@ -11,7 +18,7 @@ class OutdoorNavigationPage extends StatefulWidget {
 }
 
 class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
-  late GoogleMapController mapController;
+  GoogleMapController? mapController;
 
   // University of Ruhuna, Faculty of Engineering coordinates
   static const LatLng DESTINATION = LatLng(
@@ -19,9 +26,13 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
     80.1919646,
   ); // Faculty of Engineering, Galle
   LatLng? _currentLocation;
+  LocationModel? _currentFaculty;
 
   Set<Marker> markers = {};
   Set<Polyline> polylines = {};
+
+  StreamSubscription<Position>? _positionStreamSubscription;
+  bool _showFacultyCard = false;
 
   @override
   void initState() {
@@ -30,8 +41,59 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   }
 
   Future<void> _initializeMap() async {
-    await _getCurrentLocation();
-    _addMarkers();
+    try {
+      await _getCurrentLocation();
+      _addMarkers();
+      _startLocationTracking();
+    } catch (e) {
+      debugPrint('Error initializing map: $e');
+    }
+  }
+
+  void _startLocationTracking() {
+    try {
+      _positionStreamSubscription =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.best,
+              distanceFilter: 10, // Update every 10 meters
+            ),
+          ).listen(
+            (Position position) {
+              if (!mounted) return;
+              try {
+                setState(() {
+                  _currentLocation = LatLng(
+                    position.latitude,
+                    position.longitude,
+                  );
+
+                  // Check if user is inside any faculty
+                  final currentLocation = ARNavigationHelper.getCurrentLocation(
+                    _currentLocation!,
+                  );
+                  if (currentLocation != null &&
+                      currentLocation.id != _currentFaculty?.id) {
+                    _currentFaculty = currentLocation;
+                    _showFacultyCard = true;
+                    _addMarkers();
+                  } else if (currentLocation == null) {
+                    _currentFaculty = null;
+                    _showFacultyCard = false;
+                  }
+                });
+              } catch (e) {
+                debugPrint('Error updating location: $e');
+              }
+            },
+            onError: (error) {
+              debugPrint('Location stream error: $error');
+            },
+            cancelOnError: false,
+          );
+    } catch (e) {
+      debugPrint('Error starting location tracking: $e');
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -61,39 +123,78 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   }
 
   void _addMarkers() {
-    Set<Marker> newMarkers = {
-      // Current location marker
-      if (_currentLocation != null)
-        Marker(
-          markerId: const MarkerId('current_location'),
-          position: _currentLocation!,
-          infoWindow: const InfoWindow(
-            title: 'Your Current Location',
-            snippet: 'You are here',
+    try {
+      Set<Marker> newMarkers = {
+        // Current location marker
+        if (_currentLocation != null)
+          Marker(
+            markerId: const MarkerId('current_location'),
+            position: _currentLocation!,
+            infoWindow: const InfoWindow(
+              title: 'Your Current Location',
+              snippet: 'You are here',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueBlue,
+            ),
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        // Destination marker
+        Marker(
+          markerId: const MarkerId('destination'),
+          position: DESTINATION,
+          infoWindow: const InfoWindow(
+            title: 'University of Ruhuna',
+            snippet: 'Faculty of Engineering',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         ),
-      // Destination marker
-      Marker(
-        markerId: const MarkerId('destination'),
-        position: DESTINATION,
-        infoWindow: const InfoWindow(
-          title: 'University of Ruhuna',
-          snippet: 'Faculty of Engineering',
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-    };
-    setState(() {
-      markers = newMarkers;
-    });
+        // Library marker (if inside faculty)
+        if (_currentFaculty != null && campusLocations['library'] != null)
+          Marker(
+            markerId: const MarkerId('library'),
+            position: campusLocations['library']!.coordinates,
+            infoWindow: const InfoWindow(
+              title: 'University Library',
+              snippet: 'Navigate here for AR guidance',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueYellow,
+            ),
+          ),
+        // Other campus locations when inside faculty
+        if (_currentFaculty != null &&
+            campusLocations['student_center'] != null)
+          Marker(
+            markerId: const MarkerId('student_center'),
+            position: campusLocations['student_center']!.coordinates,
+            infoWindow: const InfoWindow(
+              title: 'Student Center',
+              snippet: 'Tap for directions',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueGreen,
+            ),
+          ),
+      };
+      if (mounted) {
+        setState(() {
+          markers = newMarkers;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error adding markers: $e');
+    }
   }
 
   void _animateToDestination() {
-    if (mapController != null) {
-      mapController.animateCamera(
-        CameraUpdate.newLatLngBounds(_calculateBounds(), 100),
-      );
+    try {
+      if (mapController != null && mounted) {
+        mapController!.animateCamera(
+          CameraUpdate.newLatLngBounds(_calculateBounds(), 100),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error animating camera: $e');
     }
   }
 
@@ -132,6 +233,69 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
     }
   }
 
+  void _openARNavigation(LocationModel targetLocation) {
+    try {
+      debugPrint('Opening AR Navigation...');
+      debugPrint('Current location: $_currentLocation');
+      debugPrint('Target location: ${targetLocation.name}');
+
+      if (_currentLocation == null) {
+        debugPrint('Current location is null!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please get your location first (click location button)',
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
+      debugPrint('Pushing AR Navigation Page...');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ARCameraNavigationPage(
+            currentLocation: _currentLocation!,
+            targetLocation: targetLocation,
+          ),
+        ),
+      ).catchError((error) {
+        debugPrint('Navigation error: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $error'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      });
+    } catch (e) {
+      debugPrint('Exception in _openARNavigation: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _openTestAR() {
+    // Test location - use current location or default to faculty location
+    final testLocation = _currentLocation ?? DESTINATION;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TestARPage(currentLocation: testLocation),
+      ),
+    );
+  }
+
+  void _navigateToLocation(LocationModel location) {
+    _openGoogleMapsNavigation();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,8 +310,12 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
               children: [
                 GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                    _animateToDestination();
+                    if (mounted) {
+                      mapController = controller;
+                      _animateToDestination();
+                    } else {
+                      controller.dispose();
+                    }
                   },
                   initialCameraPosition: CameraPosition(
                     target: _currentLocation ?? DESTINATION,
@@ -162,21 +330,44 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                 ),
                 // Custom buttons
                 Positioned(
-                  bottom: 30,
+                  bottom: 200,
                   right: 20,
                   child: Column(
                     children: [
                       FloatingActionButton(
+                        heroTag: 'fab_center',
                         onPressed: _animateToDestination,
                         backgroundColor: const Color(0xFF1A2D33),
                         child: const Icon(Icons.center_focus_strong),
                       ),
                       const SizedBox(height: 10),
                       FloatingActionButton(
+                        heroTag: 'fab_location',
                         onPressed: _getCurrentLocation,
                         backgroundColor: const Color(0xFF1A2D33),
                         child: const Icon(Icons.location_searching),
                       ),
+                      const SizedBox(height: 10),
+                      // Test AR button
+                      FloatingActionButton(
+                        heroTag: 'fab_test_ar',
+                        onPressed: _openTestAR,
+                        backgroundColor: Colors.purple,
+                        child: const Icon(Icons.psychology_alt),
+                        tooltip: 'Test AR (No location needed)',
+                      ),
+                      const SizedBox(height: 10),
+                      // AR Camera button
+                      if (_currentLocation != null)
+                        FloatingActionButton(
+                          heroTag: 'fab_ar_camera',
+                          onPressed: () => _openARNavigation(
+                            campusLocations['faculty_engineering']!,
+                          ),
+                          backgroundColor: Colors.orange,
+                          child: const Icon(Icons.camera_alt),
+                          tooltip: 'AR Navigation',
+                        ),
                     ],
                   ),
                 ),
@@ -200,6 +391,20 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Show faculty card if inside faculty premises
+                        if (_showFacultyCard && _currentFaculty != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: FacultyLocationCard(
+                              location: _currentFaculty!,
+                              onNavigatePressed: () =>
+                                  _navigateToLocation(_currentFaculty!),
+                              onARNavigatePressed: () {
+                                // Navigate to library from faculty
+                                _openARNavigation(campusLocations['library']!);
+                              },
+                            ),
+                          ),
                         const Text(
                           'University of Ruhuna\nFaculty of Engineering',
                           textAlign: TextAlign.center,
@@ -233,7 +438,18 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
 
   @override
   void dispose() {
-    mapController.dispose();
+    try {
+      _positionStreamSubscription?.cancel();
+      _positionStreamSubscription = null;
+    } catch (e) {
+      debugPrint('Error cancelling location subscription: $e');
+    }
+    try {
+      mapController?.dispose();
+      mapController = null;
+    } catch (e) {
+      debugPrint('Error disposing map controller: $e');
+    }
     super.dispose();
   }
 }

@@ -10,7 +10,6 @@ class ARCameraPage extends StatefulWidget {
 
 class _ARCameraPageState extends State<ARCameraPage> {
   CameraController? _cameraController;
-  late List<CameraDescription> _cameras;
 
   @override
   void initState() {
@@ -19,25 +18,60 @@ class _ARCameraPageState extends State<ARCameraPage> {
   }
 
   Future<void> _initCamera() async {
-    _cameras = await availableCameras();
-    _cameraController = CameraController(
-      _cameras[0],
-      ResolutionPreset.medium,
-    );
-    await _cameraController!.initialize();
-    setState(() {});
+    try {
+      final cameras = await availableCameras();
+      if (!mounted) return;
+
+      if (cameras.isEmpty) {
+        debugPrint('No cameras available');
+        return;
+      }
+
+      _cameraController = CameraController(
+        cameras[0],
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      try {
+        await _cameraController!.initialize();
+      } catch (e) {
+        debugPrint('Camera initialization error: $e');
+        _cameraController?.dispose();
+        _cameraController = null;
+        if (mounted) {
+          setState(() {});
+        }
+        return;
+      }
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Error initializing camera: $e');
+      _cameraController?.dispose();
+      _cameraController = null;
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   @override
   void dispose() {
-    _cameraController?.dispose();
+    try {
+      _cameraController?.dispose();
+      _cameraController = null;
+    } catch (e) {
+      debugPrint('Error disposing camera: $e');
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_cameraController == null ||
-        !_cameraController!.value.isInitialized) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(child: CircularProgressIndicator()),
@@ -80,4 +114,3 @@ class _ARCameraPageState extends State<ARCameraPage> {
     );
   }
 }
- 

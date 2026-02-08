@@ -102,6 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               children: [
                 FloatingActionButton(
+                  heroTag: 'home_fab_navigate',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
@@ -116,6 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
+                  heroTag: 'home_fab_camera',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
