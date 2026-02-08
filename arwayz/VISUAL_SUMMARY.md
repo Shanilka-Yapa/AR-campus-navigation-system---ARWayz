@@ -9,6 +9,7 @@ Your AR Campus Navigation app now has **complete indoor navigation capabilities*
 ## 📊 Feature Comparison
 
 ### Before Implementation
+
 ```
 MAP VIEW ONLY
 ├─ Google Maps
@@ -20,10 +21,11 @@ MAP VIEW ONLY
 ```
 
 ### After Implementation ✨
+
 ```
 OUTDOOR NAVIGATION
 ├─ Google Maps
-├─ Your location (blue dot)  
+├─ Your location (blue dot)
 ├─ Faculty destination (red pin)
 ├─ Multiple campus markers
 ├─ Zoom/pan controls
@@ -118,6 +120,7 @@ User Opens App
 ## 🔧 Component Breakdown
 
 ### 1. Location Model
+
 ```
 LocationModel
 ├─ id: string (unique identifier)
@@ -131,6 +134,7 @@ LocationModel
 ```
 
 **Configured Locations**:
+
 1. Faculty Engineering (200m radius)
 2. Library (150m radius)
 3. Student Center (150m radius)
@@ -139,6 +143,7 @@ LocationModel
 ---
 
 ### 2. Navigation Helper
+
 ```
 ARNavigationHelper
 ├─ calculateBearing(from, to) → double
@@ -150,6 +155,7 @@ ARNavigationHelper
 ```
 
 **Calculations Used**:
+
 - Haversine formula for distance
 - atan2 for bearing
 - 8-point compass for directions
@@ -157,6 +163,7 @@ ARNavigationHelper
 ---
 
 ### 3. AR Camera Page
+
 ```
 ARCameraNavigationPage (StatefulWidget)
 ├─ Inputs:
@@ -181,6 +188,7 @@ ARCameraNavigationPage (StatefulWidget)
 ---
 
 ### 4. Faculty Card Widget
+
 ```
 FacultyLocationCard (StatelessWidget)
 ├─ Inputs:
@@ -203,6 +211,7 @@ FacultyLocationCard (StatelessWidget)
 ---
 
 ### 5. Modified Main Page
+
 ```
 OutdoorNavigationPage (StatefulWidget)
 ├─ New State Variables:
@@ -236,9 +245,9 @@ GPS Location Update
     ├─ Every 10 meters of movement
     ├─ Via Geolocator package
     └─ Triggered in _startLocationTracking()
-    
+
     ↓
-    
+
 Check ALL Geofences
     │
     ├─ For each campus location:
@@ -249,25 +258,25 @@ Check ALL Geofences
     ├─ Library: 150m
     ├─ Student Center: 150m
     └─ Cafeteria: 100m
-    
+
     ↓
-    
+
 Update Current Faculty
     │
     ├─ If inside: _currentFaculty = location
     ├─ If outside: _currentFaculty = null
     └─ Set _showFacultyCard accordingly
-    
+
     ↓
-    
+
 Update Map
     │
     ├─ Update current location marker
     ├─ Add/remove faculty markers
     └─ Refresh map display
-    
+
     ↓
-    
+
 Update AR Navigation (if active)
     │
     ├─ Recalculate bearing
@@ -275,9 +284,9 @@ Update AR Navigation (if active)
     ├─ Update arrow rotation
     ├─ Update distance text
     └─ Update direction text
-    
+
     ↓
-    
+
 Display to User
     │
     └─ Smooth, real-time updates
@@ -288,6 +297,7 @@ Display to User
 ## 🎮 Button & Control Layout
 
 ### Map View (Outdoor Navigation)
+
 ```
 ┌─────────────────────────────────────┐
 │  Google Map with markers            │
@@ -311,6 +321,7 @@ Display to User
 ```
 
 ### AR Camera View
+
 ```
 ┌─────────────────────────────────────┐
 │ ╔═════════════════════════════════╗ │
@@ -335,6 +346,7 @@ Display to User
 ```
 
 ### Faculty Card Popup
+
 ```
 ┌──────────────────────────────────┐
 │ ✓ You are in                     │
@@ -407,7 +419,7 @@ Map View (Outdoor)
     ├─ User sees orange camera button
     │
     ↓
-    
+
 User Enters Faculty (200m)
     │
     ├─ Blue card auto-appears
@@ -415,7 +427,7 @@ User Enters Faculty (200m)
     ├─ Shows two buttons: [Directions] [AR Nav]
     │
     ↓
-    
+
 User Clicks [AR Nav] OR [📷 Camera]
     │
     ├─ Camera opens
@@ -427,7 +439,7 @@ User Clicks [AR Nav] OR [📷 Camera]
     │  └─ Bearing (e.g., "45°")
     │
     ↓
-    
+
 User Follows Arrow
     │
     ├─ Walks toward arrow direction
@@ -436,14 +448,14 @@ User Follows Arrow
     ├─ Direction text updates if needed
     │
     ↓
-    
+
 User Reaches Target
     │
     ├─ Distance very small (< 20m)
     ├─ User knows they arrived
     │
     ↓
-    
+
 User Closes AR Mode
     │
     └─ Returns to map view

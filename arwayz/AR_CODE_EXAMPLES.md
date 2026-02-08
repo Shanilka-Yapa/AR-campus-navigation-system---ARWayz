@@ -70,7 +70,7 @@ class ARNavigationHelper {
 
   static double calculateBearing(LatLng from, LatLng to) {
     final bearing = /* ... calculation ... */;
-    
+
     if (DEBUG) {
       debugPrint('Bearing from $from to $to: $bearing°');
     }
@@ -79,7 +79,7 @@ class ARNavigationHelper {
 
   static double calculateDistance(LatLng from, LatLng to) {
     final distance = /* ... calculation ... */;
-    
+
     if (DEBUG) {
       debugPrint('Distance: ${distance.toStringAsFixed(1)}m');
     }
@@ -207,18 +207,22 @@ colors: [
 ## 📍 How to Find Coordinates
 
 ### Using Google Maps
+
 1. Go to maps.google.com
 2. Right-click on location
 3. Copy the latitude, longitude shown
 4. Format: `LatLng(6.0785, 80.1925)`
 
 ### Using Plus Codes
+
 Plus Code: **·35HR+QJ9**
+
 - Look up using Google Maps
 - Convert to coordinates
 - Use in LatLng format
 
 ### GPS Coordinates Format
+
 ```dart
 // Standard format (Decimal Degrees):
 LatLng(latitude, longitude)
@@ -237,6 +241,7 @@ LatLng(40.712776, -74.005974)    // New York
 ## 🔍 Testing Code Snippets
 
 ### Print Current Location
+
 Add to [lib/outdoor_navigation_page.dart](lib/outdoor_navigation_page.dart):
 
 ```dart
@@ -244,7 +249,7 @@ void _debugPrintLocation() {
   if (_currentLocation != null) {
     debugPrint('Current Location: ${_currentLocation!.latitude}, ${_currentLocation!.longitude}');
     debugPrint('Current Faculty: ${_currentFaculty?.name}');
-    
+
     if (_currentFaculty != null) {
       final distance = _currentFaculty!.distanceTo(_currentLocation!);
       debugPrint('Distance to center: $distance meters');
@@ -257,6 +262,7 @@ _debugPrintLocation();
 ```
 
 ### Calculate Distance to Any Location
+
 ```dart
 void calculateDistanceTo(LatLng targetLocation) {
   if (_currentLocation != null) {
@@ -270,6 +276,7 @@ void calculateDistanceTo(LatLng targetLocation) {
 ```
 
 ### Get Bearing to Any Location
+
 ```dart
 void getBearingTo(LatLng targetLocation) {
   if (_currentLocation != null) {
@@ -288,6 +295,7 @@ void getBearingTo(LatLng targetLocation) {
 ## 🎨 UI Customization Examples
 
 ### Change AR View Text Color
+
 **File**: [lib/pages/ar_camera_navigation_page.dart](lib/pages/ar_camera_navigation_page.dart)
 
 ```dart
@@ -313,6 +321,7 @@ Text(
 ```
 
 ### Change Button Colors
+
 ```dart
 // AR Navigation button (orange):
 FloatingActionButton(
@@ -387,6 +396,7 @@ Use this template to add locations:
 ## 🚀 Advanced Customizations
 
 ### Custom Geofence Shape (Advanced)
+
 If you want complex shapes instead of circles:
 
 ```dart
@@ -403,6 +413,7 @@ bool isWithinPolygon(LatLng point, List<LatLng> polygon) {
 ```
 
 ### Custom Distance Units
+
 ```dart
 // Current: Meters
 double getDistanceInMeters() => _distance;
@@ -418,6 +429,7 @@ Text('${getDistanceInMeters().toStringAsFixed(0)}m')
 ```
 
 ### Custom Direction Format
+
 ```dart
 // Current: Cardinal (N, NE, E, etc.)
 String getDirectionText(double bearing) {
@@ -461,17 +473,20 @@ After making changes, verify:
 ## 🔗 Useful Links & Resources
 
 ### Documentation
+
 - [Google Maps Flutter](https://pub.dev/packages/google_maps_flutter)
 - [Camera Plugin](https://pub.dev/packages/camera)
 - [Geolocator](https://pub.dev/packages/geolocator)
 - [Dart Math Library](https://api.dart.dev/stable/dart-math/dart-math-library.html)
 
 ### Coordinate Tools
+
 - [Google Maps](https://maps.google.com)
 - [Plus Codes](https://plus.codes)
 - [GeoLocation](https://www.latlong.net)
 
 ### Learning Resources
+
 - [Haversine Formula](https://en.wikipedia.org/wiki/Haversine_formula)
 - [Bearing Calculation](https://www.movable-type.co.uk/scripts/latlong.html)
 - [GPS Accuracy](https://en.wikipedia.org/wiki/Dilution_of_precision)
@@ -480,19 +495,20 @@ After making changes, verify:
 
 ## 📞 Quick Help
 
-| Problem | Solution |
-|---------|----------|
-| "Can't find location_model" | Check import: `import 'models/location_model.dart';` |
+| Problem                           | Solution                                                    |
+| --------------------------------- | ----------------------------------------------------------- |
+| "Can't find location_model"       | Check import: `import 'models/location_model.dart';`        |
 | "Can't find ar_navigation_helper" | Check import: `import 'helpers/ar_navigation_helper.dart';` |
-| Coordinates not working | Verify format: `LatLng(latitude, longitude)` |
-| Geofence too small | Increase radius: `radius: 300,` |
-| Geofence too large | Decrease radius: `radius: 100,` |
+| Coordinates not working           | Verify format: `LatLng(latitude, longitude)`                |
+| Geofence too small                | Increase radius: `radius: 300,`                             |
+| Geofence too large                | Decrease radius: `radius: 100,`                             |
 
 ---
 
 **Happy Coding! 🎉**
 
 For more details, see:
+
 - [AR_FEATURES_GUIDE.md](AR_FEATURES_GUIDE.md)
 - [AR_IMPLEMENTATION_SUMMARY.md](AR_IMPLEMENTATION_SUMMARY.md)
 - [QUICK_START_AR.md](QUICK_START_AR.md)

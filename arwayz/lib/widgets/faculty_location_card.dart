@@ -17,9 +17,7 @@ class FacultyLocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -89,26 +87,17 @@ class FacultyLocationCard extends StatelessWidget {
                 ),
                 child: Text(
                   location.description,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ),
               const SizedBox(height: 12),
               // Divider
-              Container(
-                height: 1,
-                color: Colors.white.withOpacity(0.2),
-              ),
+              Container(height: 1, color: Colors.white.withOpacity(0.2)),
               const SizedBox(height: 12),
               // Info text
               const Text(
                 'You are now in the faculty premises. You can navigate to nearby locations.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
               const SizedBox(height: 16),
               // Action buttons

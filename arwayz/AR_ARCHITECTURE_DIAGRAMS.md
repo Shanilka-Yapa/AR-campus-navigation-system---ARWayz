@@ -175,6 +175,7 @@ FOR EACH LOCATION {
 ```
 
 ### Faculty Geofence Example
+
 ```
               ┌─────────────────┐
               │   Faculty       │

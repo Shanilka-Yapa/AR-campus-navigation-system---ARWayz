@@ -3,6 +3,7 @@
 ## 🎯 What's New
 
 ### 1️⃣ **AR Camera Navigation Button**
+
 ```
 Map View
   └─ Orange Camera Icon (FAB)
@@ -14,6 +15,7 @@ Map View
 ```
 
 ### 2️⃣ **Faculty Premises Detection**
+
 ```
 When User Enters Faculty (200m radius):
   └─ Blue Card Appears ↑
@@ -24,6 +26,7 @@ When User Enters Faculty (200m radius):
 ```
 
 ### 3️⃣ **AR Navigation Interface**
+
 ```
 AR Camera View:
   ├─ Top Bar: Location name + Distance
@@ -35,6 +38,7 @@ AR Camera View:
 ```
 
 ### 4️⃣ **Location Tracking**
+
 ```
 Real-time Updates:
   └─ Every 10 meters of movement
@@ -50,6 +54,7 @@ Real-time Updates:
 ## 📱 User Flow
 
 ### Standard Navigation
+
 ```
 1. Launch App
    ↓
@@ -63,6 +68,7 @@ Real-time Updates:
 ```
 
 ### Faculty Navigation
+
 ```
 1. Walk toward Faculty (within 200m)
    ↓
@@ -78,24 +84,28 @@ Real-time Updates:
 ## 🔍 Key Features Explained
 
 ### **Bearing Calculation**
+
 - Calculates compass direction from you to target
 - Updates every time you move
 - Shows in degrees (0-360°)
 - Displays as cardinal direction (N, NE, E, SE, S, SW, W, NW)
 
 ### **Distance Tracking**
+
 - Real-time distance in meters
 - Decreases as you get closer
 - Updates every 10 meters of movement
 - Shown in AR view and on map
 
 ### **AR Arrow Guidance**
+
 - Rotates to point toward destination
 - Large, easy-to-see visual
 - Updates continuously
 - Points direction of bearing
 
 ### **Geofencing System**
+
 - Creates invisible boundary around locations
 - Detects when you enter/exit
 - Shows appropriate card/UI
@@ -105,37 +115,40 @@ Real-time Updates:
 
 ## 📍 Configured Locations
 
-| Location | Coordinates | Radius | Purpose |
-|----------|------------|--------|---------|
-| Faculty Engineering | 6.0793684, 80.1919646 | 200m | Main destination |
-| Library | 6.0785, 80.1925 | 150m | Indoor navigation target |
-| Student Center | 6.0800, 80.1910 | 150m | Alternative destination |
-| Cafeteria | 6.0775, 80.1930 | 100m | POI |
+| Location            | Coordinates           | Radius | Purpose                  |
+| ------------------- | --------------------- | ------ | ------------------------ |
+| Faculty Engineering | 6.0793684, 80.1919646 | 200m   | Main destination         |
+| Library             | 6.0785, 80.1925       | 150m   | Indoor navigation target |
+| Student Center      | 6.0800, 80.1910       | 150m   | Alternative destination  |
+| Cafeteria           | 6.0775, 80.1930       | 100m   | POI                      |
 
 ---
 
 ## 🎮 Control Guide
 
 ### **Map View**
-| Button | Action |
-|--------|--------|
-| 📍 Location Icon | Refresh current location |
-| 🎯 Center Focus | Zoom/animate to show both locations |
-| 📷 Orange Camera | Open AR Navigation |
+
+| Button           | Action                              |
+| ---------------- | ----------------------------------- |
+| 📍 Location Icon | Refresh current location            |
+| 🎯 Center Focus  | Zoom/animate to show both locations |
+| 📷 Orange Camera | Open AR Navigation                  |
 
 ### **AR View**
-| Element | Function |
-|---------|----------|
-| ↑ Arrow | Points to destination |
-| Distance Text | Shows meters remaining |
+
+| Element        | Function                |
+| -------------- | ----------------------- |
+| ↑ Arrow        | Points to destination   |
+| Distance Text  | Shows meters remaining  |
 | Direction Text | Shows compass direction |
-| Close Button | Exit AR mode |
+| Close Button   | Exit AR mode            |
 
 ---
 
 ## 🔧 How It Works Behind the Scenes
 
 ### **Location Tracking**
+
 ```
 Geolocator → Get GPS → Every 10m → Update State
      ↓
@@ -147,14 +160,17 @@ Recalculate Distance → Update Distance Text
 ```
 
 ### **Bearing Calculation (Math)**
+
 ```
-atan2(sin(Δlong) × cos(lat2), 
-      cos(lat1) × sin(lat2) − 
+atan2(sin(Δlong) × cos(lat2),
+      cos(lat1) × sin(lat2) −
       sin(lat1) × cos(lat2) × cos(Δlong))
 ```
+
 = Angle pointing from position1 → position2
 
 ### **Distance Calculation**
+
 ```
 Using Haversine Formula:
 - Distance = Earth Radius × Angular Distance
@@ -166,25 +182,30 @@ Using Haversine Formula:
 ## ✅ What You Can Do Now
 
 ✅ **Get Real-time GPS Navigation**
+
 - See where you are on map
 - Track progress to destination
 
 ✅ **Use AR for Visual Guidance**
+
 - Point camera at sky
 - Follow rotating arrow
 - Know exact direction to go
 
 ✅ **Automatic Premises Detection**
+
 - Enter faculty area → card appears
 - Leave area → card disappears
 - Know when you've arrived
 
 ✅ **Navigate Multiple Locations**
+
 - Switch targets mid-journey
 - Navigate faculty to library
 - Go between campus locations
 
 ✅ **Get Distance Updates**
+
 - Real-time meter counting
 - Know how far to go
 - Track progress
@@ -194,15 +215,18 @@ Using Haversine Formula:
 ## 📊 Technical Details
 
 ### Files Modified
+
 - `outdoor_navigation_page.dart` → Added AR features
 
 ### Files Created
+
 - `models/location_model.dart` → Location & geofence data
 - `helpers/ar_navigation_helper.dart` → Math calculations
 - `pages/ar_camera_navigation_page.dart` → AR camera UI
 - `widgets/faculty_location_card.dart` → Faculty card UI
 
 ### Key Functions
+
 - `calculateBearing()` → Find compass direction
 - `calculateDistance()` → Find distance in meters
 - `isWithinGeofence()` → Check if in location boundary

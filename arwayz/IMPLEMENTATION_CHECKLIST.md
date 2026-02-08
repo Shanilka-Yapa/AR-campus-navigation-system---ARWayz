@@ -3,6 +3,7 @@
 ## ✅ Completed Features
 
 ### Core AR Camera Navigation
+
 - [x] AR camera page with live feed
 - [x] Navigation arrows pointing to target
 - [x] Real-time distance calculation
@@ -11,6 +12,7 @@
 - [x] Exit button to close AR mode
 
 ### Geofencing & Location Detection
+
 - [x] Location model with geofence support
 - [x] Continuous location tracking
 - [x] Faculty premises detection (200m radius)
@@ -18,6 +20,7 @@
 - [x] Multiple location support
 
 ### UI Components
+
 - [x] Faculty location card
 - [x] AR camera button (orange icon)
 - [x] Direction text display
@@ -26,6 +29,7 @@
 - [x] Responsive button layout
 
 ### Navigation Helper
+
 - [x] Bearing calculation (haversine formula)
 - [x] Distance calculation
 - [x] Direction text conversion (N, NE, E, etc.)
@@ -34,6 +38,7 @@
 - [x] Nearest location finding
 
 ### Integration
+
 - [x] Added imports to outdoor_navigation_page.dart
 - [x] Location tracking subscription
 - [x] Faculty card display logic
@@ -45,6 +50,7 @@
 ## 📋 Setup Instructions
 
 ### 1. **Build the Project**
+
 ```bash
 cd arwayz
 flutter pub get
@@ -52,12 +58,14 @@ flutter run
 ```
 
 ### 2. **Test AR Navigation**
+
 - Run app on Android device (AR requires physical device)
 - Allow location and camera permissions
 - Navigate to/near faculty coordinates
 - Click orange camera button
 
 ### 3. **Verify Features**
+
 - [ ] Location tracking active (blue dot on map)
 - [ ] Faculty card appears when entering premises
 - [ ] AR navigation opens with camera
@@ -70,16 +78,19 @@ flutter run
 ## 🎯 Testing Coordinates
 
 ### Faculty of Engineering
+
 - **Latitude**: 6.0793684
 - **Longitude**: 80.1919646
 - **Geofence Radius**: 200m
 
 ### Library (Target)
+
 - **Latitude**: 6.0785 (adjust if needed)
 - **Longitude**: 80.1925 (adjust if needed)
 - **Geofence Radius**: 150m
 
-**To Test**: 
+**To Test**:
+
 1. Use GPS simulator on emulator OR
 2. Navigate physically to coordinates OR
 3. Edit test coordinates in code temporarily
@@ -89,7 +100,9 @@ flutter run
 ## 🔧 Customization Guide
 
 ### Change Faculty Location
+
 Edit in [lib/models/location_model.dart](lib/models/location_model.dart):
+
 ```dart
 'faculty_engineering': LocationModel(
   coordinates: const LatLng(NEW_LAT, NEW_LNG),
@@ -98,7 +111,9 @@ Edit in [lib/models/location_model.dart](lib/models/location_model.dart):
 ```
 
 ### Change Library Location
+
 Find and update the library coordinates:
+
 ```dart
 'library': LocationModel(
   coordinates: const LatLng(6.0785, 80.1925), // Update these
@@ -106,7 +121,9 @@ Find and update the library coordinates:
 ```
 
 ### Adjust Geofence Sensitivity
+
 Smaller radius = stricter detection:
+
 ```dart
 radius: 100,  // 100 meters (strict)
 radius: 200,  // 200 meters (relaxed)
@@ -118,17 +135,20 @@ radius: 500,  // 500 meters (very relaxed)
 ## ⚙️ System Components
 
 ### Location Tracking
+
 - **Update Frequency**: Every 10 meters of movement
 - **Accuracy**: GPS best (LocationAccuracy.best)
 - **Subscription**: Continuous during app lifetime
 
 ### Bearing Calculations
+
 - **Method**: Haversine formula with atan2
 - **Output**: Degrees (0-360)
 - **Direction Text**: 8 cardinal directions
 - **Real-time**: Updates on location change
 
 ### Geofencing
+
 - **Type**: Radius-based geofence
 - **Calculation**: Distance formula (Haversine)
 - **Checking**: On every location update
@@ -160,26 +180,28 @@ Update UI
 
 ## 🚨 Common Issues & Solutions
 
-| Issue | Solution |
-|-------|----------|
-| AR won't open | Grant camera permission manually |
-| Faculty card missing | Check if inside 200m radius |
-| Arrow pointing wrong | Calibrate phone compass |
-| No location tracking | Check location permission |
-| Slow updates | Increase distance filter in Geolocator |
-| High battery drain | Decrease update frequency |
+| Issue                | Solution                               |
+| -------------------- | -------------------------------------- |
+| AR won't open        | Grant camera permission manually       |
+| Faculty card missing | Check if inside 200m radius            |
+| Arrow pointing wrong | Calibrate phone compass                |
+| No location tracking | Check location permission              |
+| Slow updates         | Increase distance filter in Geolocator |
+| High battery drain   | Decrease update frequency              |
 
 ---
 
 ## 🔄 Lifecycle Management
 
 ### On App Start
+
 1. Request location permission
 2. Start location tracking
 3. Initialize map
 4. Add markers
 
 ### On Location Update
+
 1. Update current location
 2. Check geofences
 3. Update faculty status
@@ -187,12 +209,14 @@ Update UI
 5. Notify AR navigation if active
 
 ### On AR Navigation Start
+
 1. Get device heading
 2. Calculate bearing to target
 3. Calculate distance
 4. Update UI continuously
 
 ### On App Close
+
 1. Cancel location subscription
 2. Dispose camera controller
 3. Dispose map controller
@@ -212,6 +236,7 @@ Update UI
 ## 🎓 Learning Resources
 
 ### Concepts Used:
+
 1. **Geofencing**: Location-based boundary detection
 2. **Bearing**: Compass direction between two points
 3. **Haversine Formula**: Great-circle distance calculation
@@ -219,6 +244,7 @@ Update UI
 5. **AR Overlays**: Camera feed + graphical elements
 
 ### References:
+
 - Google Maps Flutter API
 - Geolocator Documentation
 - Camera Plugin Documentation
