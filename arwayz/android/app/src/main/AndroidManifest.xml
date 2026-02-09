@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.arwayz">
 
@@ -6,14 +5,6 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-=======
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
->>>>>>> b76b32188bd1436dc2a35a53860e2531f27ee25f
 
     <application
         android:label="arwayz"
@@ -22,11 +13,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-<<<<<<< HEAD
             android:value="PASTE_YOUR_AIZA_KEY_HERE"/>
-=======
-            android:value="YOUR_API_KEY_HERE"/>
->>>>>>> b76b32188bd1436dc2a35a53860e2531f27ee25f
 
         <activity
             android:name=".MainActivity"
