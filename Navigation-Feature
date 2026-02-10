@@ -1,0 +1,83 @@
+Faculty Navigation Module
+Overview
+This module implements a cost-effective, offline-capable navigation system for the University Faculty premises. It is designed to guide students and visitors from the main entrance (Security Room) to various departments and facilities using OpenStreetMap (OSM).
+
+Unlike standard GPS apps, this feature locks the camera to the faculty boundaries and provides specific, pre-defined walking paths to ensure users stick to main roads.
+
+Key Features
+1. Zero-Cost Mapping Solution
+Switched from Google Maps to OpenStreetMap (OSM): Removed the dependency on paid API keys (Google Maps Platform).
+
+Library: Uses flutter_map for rendering and latlong2 for coordinate handling.
+
+Advantage: completely free for educational use and development.
+
+2. Smart "Faculty Lock" Mode
+Geofencing: The app monitors the user's live location stream.
+
+Trigger: When the user comes within 50 meters of the Security Room, the app enters "Faculty Mode."
+
+Action:
+
+The camera automatically zooms in (Level 19.0) to show details.
+
+The map locks to the faculty boundaries, preventing the user from drifting away to irrelevant areas.
+
+Padding is applied to the bottom of the map to ensure the UI cards don't cover the map content.
+
+3. "Smart Path" Routing Algorithm
+Since free routing APIs are often unreliable for small internal roads, a custom local routing logic was implemented:
+
+Logic: Instead of drawing a straight line through buildings, paths are routed through a "Main Junction" node.
+
+Flow: User Location -> Main Junction -> Destination.
+
+Result: Navigation lines look realistic and follow the main road network.
+
+4. Interactive Places Directory
+Horizontal Card List: A swipeable list of locations (Departments, Canteen, Library, Hostels, etc.) appears at the bottom.
+
+Sync:
+
+Swiping a card automatically selects that location on the map.
+
+Tapping a card zooms the camera directly to that building (Zoom Level 20.0).
+
+Visual Feedback: The selected marker turns red and enlarges, while others remain standard.
+
+Technical Implementation
+Core Dependencies
+YAML
+dependencies:
+  flutter_map: ^6.0.0      # Rendering the map
+  latlong2: ^0.9.0         # Handling LatLng coordinates
+  geolocator: ^10.1.0      # Live GPS tracking
+Key Functions
+_enterFacultyMode(): Handles the UI transition when entering the premises (Zoom, Constraint, SnackBar).
+
+_calculateSmartPath(start, end): Generates the polyline points for the navigation path.
+
+fitCamera: Dynamically adjusts the view to fit the faculty bounds while respecting UI padding.
+ Locations Mapped
+The system currently supports navigation to 15+ internal locations, including:
+
+Admin & Security: Security Room, Admin Building.
+
+Academic: DMME, DEIE, DCEE Departments, Library, Workshop.
+
+Facilities: Main Canteen, Guest House, Playground, Basketball Court.
+
+Accommodation: Hostels A, B, and C.
+
+Usage Flow
+Start: User opens the map outside the faculty.
+
+Approach: User walks towards the Security Room.
+
+Trigger: App detects proximity (<50m) and snaps to "Faculty View."
+
+Navigate: User swipes the bottom cards to find "Main Canteen."
+
+Path: A blue dotted line appears, guiding the user along the main road to the canteen.
+
+Developed by EG/2022/5136 for the ARWayz Project.
