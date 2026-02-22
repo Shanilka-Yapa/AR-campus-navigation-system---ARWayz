@@ -7,6 +7,8 @@ import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
 import 'google_map_page.dart';
+import 'insidefac.dart'; // Fixed: Added missing semicolon
+import 'package:geolocator/geolocator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,11 +46,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _buildingIdController = TextEditingController();
 
-  final ImagePicker _picker = ImagePicker();
-
   void _onSubmit() {
     final buildingId = _buildingIdController.text.trim();
-
     if (buildingId.toUpperCase() == 'B001') {
       Navigator.push(
         context,
@@ -57,9 +56,29 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid Building ID')),
+      );
+    }
+  }
+
+  Future<void> _handleMapNavigation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      Navigator.push(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid Building ID')));
+        MaterialPageRoute(builder: (context) => const GoogleMapPage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Location permission is required for the map.')),
+      );
     }
   }
 
@@ -68,10 +87,26 @@ class _MyHomePageState extends State<MyHomePage> {
       context,
       MaterialPageRoute(builder: (context) => const QRScannerPage()),
     );
+    if (result != null) debugPrint("Got QR code: $result");
+  }
 
-    if (result != null) {
-      print("Got QR code: $result");
-    }
+  Widget _buildBottomIconButton(
+      {required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
+          ],
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Icon(icon, color: const Color(0xFF1A2D33), size: 26),
+      ),
+    );
   }
 
   @override
@@ -83,10 +118,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: null,
       body: Stack(
         children: [
-          // Background image
+          // Background
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -101,9 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
             top: 40,
             left: 16,
             child: GestureDetector(
-              onTap: () {
-                SystemNavigator.pop();
-              },
+              onTap: () => SystemNavigator.pop(),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.8),
@@ -115,7 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          // Foreground content
+          // Main UI
           Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -123,8 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    const SizedBox(height: 20),
+                  children: [
                     TextField(
                       textAlign: TextAlign.center,
                       controller: _buildingIdController,
@@ -135,74 +166,36 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.circular(20),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: Icon(
-                          Icons.location_city,
-                          color: Color(0xFF1A2D33),
-                        ),
+                        prefixIcon: const Icon(Icons.location_city,
+                            color: Color(0xFF1A2D33)),
                         hintText: 'Enter Building ID',
-                        hintStyle: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
                       ),
-                      keyboardType: TextInputType.text,
-                      textCapitalization: TextCapitalization.characters,
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: _onSubmit,
                       icon: const Icon(Icons.send, color: Colors.white),
-                      label: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      label: const Text('Submit',
+                          style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1A2D33),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                            borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: _openCamera,
+                      icon: const Icon(Icons.qr_code_scanner,
+                          color: Color(0xFF1A2D33)),
+                      label: const Text('Scan QR Code',
+                          style: TextStyle(color: Colors.black)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        elevation: 6,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 14,
-                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(
-                            Icons.qr_code_scanner,
-                            color: Color(0xFF1A2D33),
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Scan QR Code',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
+                            borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ],
@@ -211,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          // Bottom icons with white background
+          // Bottom Navigation Row
           Positioned(
             bottom: 30,
             left: 0,
@@ -219,86 +212,34 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Navigation
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                _buildBottomIconButton(
+                  icon: Icons.navigation,
+                  onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const OutdoorNavigationPage(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 4,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: const Icon(Icons.navigation,
-                        color: Color(0xFF1A2D33), size: 28),
-                  ),
+                          builder: (context) =>
+                          const OutdoorNavigationPage())),
                 ),
-                // AR Camera
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                _buildBottomIconButton(
+                  icon: Icons.camera_alt,
+                  onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ARCameraPage(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 4,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: const Icon(Icons.camera_alt,
-                        color: Color(0xFF1A2D33), size: 28),
-                  ),
+                          builder: (context) => const ARCameraPage())),
                 ),
-                // Map
-                GestureDetector(
+                _buildBottomIconButton(
+                  icon: Icons.near_me,
+                  onTap: _handleMapNavigation,
+                ),
+                _buildBottomIconButton(
+                  icon: Icons.map,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const GoogleMapPage(),
-                      ),
+                          builder: (context) => const FacultyMapPage()), // Using GoogleMapPage or your custom insidefac class
                     );
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 4,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child:
-                        const Icon(Icons.map, color: Color(0xFF1A2D33), size: 28),
-                  ),
                 ),
               ],
             ),
