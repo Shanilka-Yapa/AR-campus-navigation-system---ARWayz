@@ -1,8 +1,8 @@
-/*import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
 class GoogleMapPage extends StatefulWidget {
   const GoogleMapPage({super.key});
@@ -12,879 +12,313 @@ class GoogleMapPage extends StatefulWidget {
 }
 
 class _GoogleMapPageState extends State<GoogleMapPage> {
-  final MapController _mapController = MapController();
-  final PageController _pageController = PageController(viewportFraction: 0.85);
-
+  GoogleMapController? _mapController;
   LatLng? _currentLocation;
-  int? _selectedPlaceIndex;
-  List<LatLng> _routePoints = [];
-  bool _isInsideFaculty = false;
 
-  // --------------------------------------------------------
-  // 1. CONFIGURATION
-  // --------------------------------------------------------
+  final LatLng _destination = const LatLng(6.0793684, 80.1919646); // FoE UoR
+  final TextEditingController _searchController = TextEditingController();
 
-  // The trigger point (Security Room Entrance)
-  final LatLng _securityEntrance = const LatLng(6.079587868284366, 80.19248463513672);
+  Set<Marker> _markers = {};
+  Set<Polyline> _polylines = {};
 
-  // Center of the Faculty (Used for zooming in)
-  final LatLng _facultyCenter = const LatLng(6.078800, 80.192000);
+  final String googleApiKey = "YOUR_REAL_GOOGLE_MAPS_API_KEY";
 
-  // A "Main Junction" point to make paths look realistic
-  final LatLng _mainRoadJunction = const LatLng(6.079000, 80.192000);
-
-  // The Boundaries of the Faculty
-  final LatLngBounds _facultyBounds = LatLngBounds(
-    const LatLng(6.0770, 80.1900), // South-West corner
-    const LatLng(6.0810, 80.1940), // North-East corner
-  );
-
-  // ALL FACULTY PLACES DATA
-  final List<Map<String, dynamic>> _facultyPlaces = [
-    {
-      'name': 'Security Room',
-      'desc': 'Main Entrance Security',
-      'pos': LatLng(6.079587868284366, 80.19248463513672),
-      'color': Colors.red,
-      'icon': Icons.security,
-    },
-    {
-      'name': 'Admin Building',
-      'desc': 'Administration Office',
-      'pos': LatLng(6.079387959041607, 80.19195456024359),
-      'color': Colors.redAccent,
-      'icon': Icons.admin_panel_settings,
-    },
-    {
-      'name': 'Main Library',
-      'desc': 'Faculty Library',
-      'pos': LatLng(6.079441318479151, 80.19159422228692),
-      'color': Colors.green,
-      'icon': Icons.menu_book,
-    },
-    {
-      'name': 'Main Cafeteria',
-      'desc': 'Student Canteen',
-      'pos': LatLng(6.078564478087978, 80.19235671396622),
-      'color': Colors.orange,
-      'icon': Icons.restaurant,
-    },
-    {
-      'name': 'DMME Dept',
-      'desc': 'Mechanical & Manufacturing Engineering',
-      'pos': LatLng(6.078419035928309, 80.19180745565212),
-      'color': Colors.blue,
-      'icon': Icons.engineering,
-    },
-    {
-      'name': 'DEIE Dept',
-      'desc': 'Electrical & Information Engineering',
-      'pos': LatLng(6.078174210477643, 80.19217524440813),
-      'color': Colors.blue,
-      'icon': Icons.electrical_services,
-    },
-    {
-      'name': 'DCEE Dept',
-      'desc': 'Civil & Environmental Engineering',
-      'pos': LatLng(6.078184917639603, 80.1913757454891),
-      'color': Colors.blue,
-      'icon': Icons.construction,
-    },
-    {
-      'name': 'DMME Workshop',
-      'desc': 'Engineering Workshop',
-      'pos': LatLng(6.07750153254501, 80.19094465795094),
-      'color': Colors.blueGrey,
-      'icon': Icons.build,
-    },
-    {
-      'name': 'Basketball Court',
-      'desc': 'Sports Area',
-      'pos': LatLng(6.0788110038925245, 80.19150907917387),
-      'color': Colors.greenAccent,
-      'icon': Icons.sports_basketball,
-    },
-    {
-      'name': 'Buddha Statue',
-      'desc': 'Religious Area',
-      'pos': LatLng(6.079499327781828, 80.19106611535531),
-      'color': Colors.amber,
-      'icon': Icons.self_improvement,
-    },
-    {
-      'name': 'Guest House',
-      'desc': 'University Guest House',
-      'pos': LatLng(6.078329836239884, 80.19086155237294),
-      'color': Colors.purple,
-      'icon': Icons.hotel,
-    },
-    {
-      'name': 'Hostel A',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.07778475294792, 80.19305157146461),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
-    {
-      'name': 'Hostel B',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.078004432201199, 80.19282328635329),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
-    {
-      'name': 'Hostel C',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.078171176472731, 80.1932300580759),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
+  final List<Map<String, dynamic>> campusPlaces = [
+    {'name': 'FoE UoR', 'lat': 6.0793684, 'lng': 80.1919646},
+    {'name': 'Library', 'lat': 6.0805, 'lng': 80.1928},
+    {'name': 'Canteen', 'lat': 6.0789, 'lng': 80.1905},
   ];
 
   @override
   void initState() {
     super.initState();
-    _startLocationUpdates();
+    _getCurrentLocation();
   }
 
-  void _startLocationUpdates() {
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 2,
-    );
+  // 📍 GET CURRENT LOCATION
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
 
-    Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position position) {
-      _updateUserLocation(LatLng(position.latitude, position.longitude));
-    });
-  }
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      final position = await Geolocator.getCurrentPosition();
 
-  void _updateUserLocation(LatLng pos) {
-    if (!mounted) return;
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("current"),
+            position: _currentLocation!,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueBlue,
+            ),
+          ),
+        );
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("destination"),
+            position: _destination,
+          ),
+        );
+      });
 
-    setState(() {
-      _currentLocation = pos;
-
-      double dist = const Distance().as(LengthUnit.Meter, pos, _securityEntrance);
-
-      if (dist < 50 && !_isInsideFaculty) {
-        _enterFacultyMode();
-      }
-
-      if (_selectedPlaceIndex != null) {
-        _routePoints = _calculateSmartPath(pos, _facultyPlaces[_selectedPlaceIndex!]['pos']);
-      }
-    });
-  }
-
-  void _enterFacultyMode() {
-    setState(() {
-      _isInsideFaculty = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Entered Faculty Premises. Map Expanded."),
-        backgroundColor: Color(0xFF1A2D33),
-      ),
-    );
-
-    // CHANGED: We now zoom to 19.0 (Very close) to ensure markers are separated
-    // We center on the "Faculty Center" coordinate to fill the screen nicely
-    _mapController.move(_facultyCenter, 19.0);
-  }
-
-  List<LatLng> _calculateSmartPath(LatLng start, LatLng end) {
-    if (_isInsideFaculty) {
-      return [start, _mainRoadJunction, end];
-    } else {
-      return [start, end];
+      await _fetchRoute();
     }
   }
 
-  void _onPlaceSelected(int index) {
-    setState(() {
-      _selectedPlaceIndex = index;
-      if (_currentLocation != null) {
-        _routePoints = _calculateSmartPath(_currentLocation!, _facultyPlaces[index]['pos']);
-      }
-    });
+  // 🧭 FETCH REAL ROUTE
+  Future<void> _fetchRoute() async {
+    if (_currentLocation == null) return;
 
-    // When clicking a card, zoom in extremely close to that specific building
-    if (_isInsideFaculty) {
-      _mapController.move(_facultyPlaces[index]['pos'], 20.0);
-    } else {
-      _fitBounds(_currentLocation!, _facultyPlaces[index]['pos']);
+    final url =
+        "https://maps.googleapis.com/maps/api/directions/json"
+        "?origin=${_currentLocation!.latitude},${_currentLocation!.longitude}"
+        "&destination=${_destination.latitude},${_destination.longitude}"
+        "&mode=walking"
+        "&key=$googleApiKey";
+
+    final response = await http.get(Uri.parse(url));
+    final data = jsonDecode(response.body);
+
+    if (data['routes'].isNotEmpty) {
+      final points = data['routes'][0]['overview_polyline']['points'];
+      final decodedPoints = _decodePolyline(points);
+
+      setState(() {
+        _polylines.add(
+          Polyline(
+            polylineId: const PolylineId("route"),
+            color: Colors.blue.shade400,
+            width: 6,
+            points: decodedPoints,
+          ),
+        );
+      });
     }
   }
 
-  void _fitBounds(LatLng p1, LatLng p2) {
-    double minLat = p1.latitude < p2.latitude ? p1.latitude : p2.latitude;
-    double maxLat = p1.latitude > p2.latitude ? p1.latitude : p2.latitude;
-    double minLng = p1.longitude < p2.longitude ? p1.longitude : p2.longitude;
-    double maxLng = p1.longitude > p2.longitude ? p1.longitude : p2.longitude;
+  // 🔓 POLYLINE DECODER
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> poly = [];
+    int index = 0, lat = 0, lng = 0;
 
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng)),
-        padding: const EdgeInsets.all(50),
-      ),
+    while (index < encoded.length) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+
+      poly.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+    return poly;
+  }
+
+  // 🔍 SEARCH PLACE
+  Future<void> _searchPlace(String query) async {
+    final url =
+        "https://maps.googleapis.com/maps/api/geocode/json"
+        "?address=$query&key=$googleApiKey";
+
+    final response = await http.get(Uri.parse(url));
+    final data = jsonDecode(response.body);
+
+    if (data['results'].isNotEmpty) {
+      final loc = data['results'][0]['geometry']['location'];
+      final LatLng pos = LatLng(loc['lat'], loc['lng']);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(pos, 17),
+      );
+    }
+  }
+
+  // 📏 NEAREST 2 LOCATIONS
+  List<Map<String, dynamic>> getNearestPlaces() {
+    if (_currentLocation == null) return [];
+
+    for (var place in campusPlaces) {
+      place['distance'] = Geolocator.distanceBetween(
+        _currentLocation!.latitude,
+        _currentLocation!.longitude,
+        place['lat'],
+        place['lng'],
+      );
+    }
+
+    campusPlaces.sort((a, b) => a['distance'].compareTo(b['distance']));
+    return campusPlaces.take(2).toList();
+  }
+
+  void _centerToDestination() {
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(_destination, 17),
     );
+  }
+
+  void _centerToCurrentLocation() {
+    if (_currentLocation != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentLocation!, 17),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final nearestPlaces = getNearestPlaces();
+
     return Scaffold(
       body: _currentLocation == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _currentLocation!,
-              initialZoom: 16.0,
-              // Constraint allows viewing the faculty, but stops drifting too far away
-              cameraConstraint: _isInsideFaculty
-                  ? CameraConstraint.contain(bounds: _facultyBounds)
-                  : const CameraConstraint.unconstrained(),
-
-              // CHANGED: Minimum zoom inside faculty is now 18.0
-              // This prevents the user from zooming out too far and overlapping markers
-              minZoom: _isInsideFaculty ? 18.0 : 10.0,
-              maxZoom: 22.0,
+          // 🗺️ MAP
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _currentLocation!,
+              zoom: 16,
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.arwayz',
-              ),
-              PolylineLayer(
-                polylines: [
-                  if (_routePoints.isNotEmpty)
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 6.0,
-                      color: Colors.blueAccent.withOpacity(0.8),
-                      isDotted: true,
-                    ),
-                ],
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _currentLocation!,
-                    width: 40,
-                    height: 40,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: const [BoxShadow(blurRadius: 5)],
-                      ),
-                      child: const Icon(Icons.person, color: Colors.white, size: 20),
-                    ),
-                  ),
-                  ..._facultyPlaces.asMap().entries.map((entry) {
-                    int idx = entry.key;
-                    var place = entry.value;
-                    bool isSelected = idx == _selectedPlaceIndex;
-                    bool shouldShow = _isInsideFaculty || isSelected;
-
-                    if (!shouldShow) return const Marker(point: LatLng(0,0), child: SizedBox());
-
-                    return Marker(
-                      point: place['pos'],
-                      width: 60,
-                      height: 60,
-                      child: GestureDetector(
-                        onTap: () {
-                          _pageController.jumpToPage(idx);
-                          _onPlaceSelected(idx);
-                        },
-                        child: Column(
-                          children: [
-                            Icon(
-                                place['icon'],
-                                color: isSelected ? Colors.red : place['color'],
-                                size: isSelected ? 45 : 35
-                            ),
-                            if (isSelected)
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(place['name'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ],
+            myLocationEnabled: true,
+            markers: _markers,
+            polylines: _polylines,
+            onMapCreated: (controller) {
+              _mapController = controller;
+            },
           ),
+
+          // 🔙 BACK BUTTON
           Positioned(
-            top: 50,
+            top: 45,
             left: 16,
-            child: CircleAvatar(
+            child: FloatingActionButton(
+              heroTag: "back",
+              mini: true,
               backgroundColor: const Color(0xFF1A2D33),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context),
+              child: const Icon(Icons.arrow_back, color: Colors.white),
+            ),
+          ),
+
+          // 🔍 SEARCH BAR
+          Positioned(
+            top: 45,
+            left: 60,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onSubmitted: _searchPlace,
+                decoration: const InputDecoration(
+                  hintText: "Where are you going?",
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.search),
+                ),
               ),
             ),
           ),
+
+          // 🪪 NEAREST CARDS
           Positioned(
             bottom: 30,
-            left: 0,
-            right: 0,
-            height: 150,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _facultyPlaces.length,
-              onPageChanged: (index) => _onPlaceSelected(index),
-              itemBuilder: (context, index) {
-                final place = _facultyPlaces[index];
-                final isSelected = _selectedPlaceIndex == index;
+            left: 16,
+            right: 16,
+            child: SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: nearestPlaces.map((p) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: _placeCard(
+                      p['name'],
+                      "${p['distance'].toStringAsFixed(0)} m",
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
 
-                return GestureDetector(
-                  onTap: () => _onPlaceSelected(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 80,
-                          decoration: BoxDecoration(
-                            color: place['color'].withOpacity(0.15),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              bottomLeft: Radius.circular(20),
-                            ),
-                          ),
-                          child: Icon(place['icon'], size: 35, color: place['color']),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  place['name'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A2D33),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  place['desc'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                if (isSelected)
-                                  Row(
-                                    children: const [
-                                      Icon(Icons.directions_walk, size: 14, color: Colors.blue),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        "FOLLOW PATH",
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+          // 🧭 NAV BUTTONS
+          Positioned(
+            bottom: 30,
+            right: 16,
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  heroTag: "dest",
+                  backgroundColor: const Color(0xFF1A2D33),
+                  onPressed: _centerToDestination,
+                  child: const Icon(Icons.navigation,
+                      color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: "curr",
+                  backgroundColor: const Color(0xFF1A2D33),
+                  onPressed: _centerToCurrentLocation,
+                  child:
+                  const Icon(Icons.my_location, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}*/
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 
-class GoogleMapPage extends StatefulWidget {
-  const GoogleMapPage({super.key});
-
-  @override
-  State<GoogleMapPage> createState() => _GoogleMapPageState();
-}
-
-class _GoogleMapPageState extends State<GoogleMapPage> {
-  final MapController _mapController = MapController();
-  final PageController _pageController = PageController(viewportFraction: 0.85);
-
-  LatLng? _currentLocation;
-  int? _selectedPlaceIndex;
-  List<LatLng> _routePoints = [];
-  bool _isInsideFaculty = false;
-
-  // --------------------------------------------------------
-  // 1. CONFIGURATION
-  // --------------------------------------------------------
-
-  // The trigger point (Security Room Entrance)
-  final LatLng _securityEntrance = const LatLng(6.079587868284366, 80.19248463513672);
-
-  // Center of the Faculty (Used for zooming in)
-  final LatLng _facultyCenter = const LatLng(6.078800, 80.192000);
-
-  // A "Main Junction" point to make paths look realistic
-  final LatLng _mainRoadJunction = const LatLng(6.079000, 80.192000);
-
-  // The Boundaries of the Faculty
-  final LatLngBounds _facultyBounds = LatLngBounds(
-    const LatLng(6.0770, 80.1900), // South-West corner
-    const LatLng(6.0820, 80.1940), // North-East corner (Extended to fit Playground)
-  );
-
-  // ALL FACULTY PLACES DATA
-  final List<Map<String, dynamic>> _facultyPlaces = [
-    {
-      'name': 'Security Room',
-      'desc': 'Main Entrance Security',
-      'pos': LatLng(6.079587868284366, 80.19248463513672),
-      'color': Colors.red,
-      'icon': Icons.security,
-    },
-    {
-      'name': 'Admin Building',
-      'desc': 'Administration Office',
-      'pos': LatLng(6.079387959041607, 80.19195456024359), // UPDATED COORDINATES
-      'color': Colors.redAccent,
-      'icon': Icons.admin_panel_settings,
-    },
-    {
-      'name': 'Playground',
-      'desc': 'Sports Ground',
-      'pos': LatLng(6.0813036049542, 80.1908771516893), // NEW PLACE
-      'color': Colors.lightGreen,
-      'icon': Icons.sports_soccer,
-    },
-    {
-      'name': 'Main Library',
-      'desc': 'Faculty Library',
-      'pos': LatLng(6.079441318479151, 80.19159422228692),
-      'color': Colors.green,
-      'icon': Icons.menu_book,
-    },
-    {
-      'name': 'Main Cafeteria',
-      'desc': 'Student Canteen',
-      'pos': LatLng(6.078564478087978, 80.19235671396622),
-      'color': Colors.orange,
-      'icon': Icons.restaurant,
-    },
-    {
-      'name': 'DMME Dept',
-      'desc': 'Mechanical & Manufacturing Engineering',
-      'pos': LatLng(6.078419035928309, 80.19180745565212),
-      'color': Colors.blue,
-      'icon': Icons.engineering,
-    },
-    {
-      'name': 'DEIE Dept',
-      'desc': 'Electrical & Information Engineering',
-      'pos': LatLng(6.078174210477643, 80.19217524440813),
-      'color': Colors.blue,
-      'icon': Icons.electrical_services,
-    },
-    {
-      'name': 'DCEE Dept',
-      'desc': 'Civil & Environmental Engineering',
-      'pos': LatLng(6.078184917639603, 80.1913757454891),
-      'color': Colors.blue,
-      'icon': Icons.construction,
-    },
-    {
-      'name': 'DMME Workshop',
-      'desc': 'Engineering Workshop',
-      'pos': LatLng(6.07750153254501, 80.19094465795094),
-      'color': Colors.blueGrey,
-      'icon': Icons.build,
-    },
-    {
-      'name': 'Basketball Court',
-      'desc': 'Sports Area',
-      'pos': LatLng(6.0788110038925245, 80.19150907917387),
-      'color': Colors.greenAccent,
-      'icon': Icons.sports_basketball,
-    },
-    {
-      'name': 'Buddha Statue',
-      'desc': 'Religious Area',
-      'pos': LatLng(6.079499327781828, 80.19106611535531),
-      'color': Colors.amber,
-      'icon': Icons.self_improvement,
-    },
-    {
-      'name': 'Guest House',
-      'desc': 'University Guest House',
-      'pos': LatLng(6.078329836239884, 80.19086155237294),
-      'color': Colors.purple,
-      'icon': Icons.hotel,
-    },
-    {
-      'name': 'Hostel A',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.07778475294792, 80.19305157146461),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
-    {
-      'name': 'Hostel B',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.078004432201199, 80.19282328635329),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
-    {
-      'name': 'Hostel C',
-      'desc': 'Student Accommodation',
-      'pos': LatLng(6.078171176472731, 80.1932300580759),
-      'color': Colors.indigo,
-      'icon': Icons.bed,
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _startLocationUpdates();
-  }
-
-  void _startLocationUpdates() {
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 2,
-    );
-
-    Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position position) {
-      _updateUserLocation(LatLng(position.latitude, position.longitude));
-    });
-  }
-
-  void _updateUserLocation(LatLng pos) {
-    if (!mounted) return;
-
-    setState(() {
-      _currentLocation = pos;
-
-      double dist = const Distance().as(LengthUnit.Meter, pos, _securityEntrance);
-
-      if (dist < 50 && !_isInsideFaculty) {
-        _enterFacultyMode();
-      }
-
-      if (_selectedPlaceIndex != null) {
-        _routePoints = _calculateSmartPath(pos, _facultyPlaces[_selectedPlaceIndex!]['pos']);
-      }
-    });
-  }
-
-  void _enterFacultyMode() {
-    setState(() {
-      _isInsideFaculty = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Entered Faculty Premises. Map Expanded."),
-        backgroundColor: Color(0xFF1A2D33),
+  Widget _placeCard(String name, String distance) {
+    return Container(
+      width: 180,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 6,
+          ),
+        ],
       ),
-    );
-
-    // Zoom to 19.0 to ensure markers are separated
-    _mapController.move(_facultyCenter, 19.0);
-  }
-
-  List<LatLng> _calculateSmartPath(LatLng start, LatLng end) {
-    if (_isInsideFaculty) {
-      return [start, _mainRoadJunction, end];
-    } else {
-      return [start, end];
-    }
-  }
-
-  void _onPlaceSelected(int index) {
-    setState(() {
-      _selectedPlaceIndex = index;
-      if (_currentLocation != null) {
-        _routePoints = _calculateSmartPath(_currentLocation!, _facultyPlaces[index]['pos']);
-      }
-    });
-
-    // When clicking a card, zoom in extremely close to that specific building
-    if (_isInsideFaculty) {
-      _mapController.move(_facultyPlaces[index]['pos'], 20.0);
-    } else {
-      _fitBounds(_currentLocation!, _facultyPlaces[index]['pos']);
-    }
-  }
-
-  void _fitBounds(LatLng p1, LatLng p2) {
-    double minLat = p1.latitude < p2.latitude ? p1.latitude : p2.latitude;
-    double maxLat = p1.latitude > p2.latitude ? p1.latitude : p2.latitude;
-    double minLng = p1.longitude < p2.longitude ? p1.longitude : p2.longitude;
-    double maxLng = p1.longitude > p2.longitude ? p1.longitude : p2.longitude;
-
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng)),
-        padding: const EdgeInsets.all(50),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _currentLocation == null
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _currentLocation!,
-              initialZoom: 16.0,
-              // Constraint allows viewing the faculty, but stops drifting too far away
-              cameraConstraint: _isInsideFaculty
-                  ? CameraConstraint.contain(bounds: _facultyBounds)
-                  : const CameraConstraint.unconstrained(),
-
-              // Min Zoom 18.0 inside to keep markers clear
-              minZoom: _isInsideFaculty ? 18.0 : 10.0,
-              maxZoom: 22.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.arwayz',
-              ),
-              PolylineLayer(
-                polylines: [
-                  if (_routePoints.isNotEmpty)
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 6.0,
-                      color: Colors.blueAccent.withOpacity(0.8),
-                      isDotted: true,
-                    ),
-                ],
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _currentLocation!,
-                    width: 40,
-                    height: 40,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: const [BoxShadow(blurRadius: 5)],
-                      ),
-                      child: const Icon(Icons.person, color: Colors.white, size: 20),
-                    ),
-                  ),
-                  ..._facultyPlaces.asMap().entries.map((entry) {
-                    int idx = entry.key;
-                    var place = entry.value;
-                    bool isSelected = idx == _selectedPlaceIndex;
-                    bool shouldShow = _isInsideFaculty || isSelected;
-
-                    if (!shouldShow) return const Marker(point: LatLng(0,0), child: SizedBox());
-
-                    return Marker(
-                      point: place['pos'],
-                      width: 60,
-                      height: 60,
-                      child: GestureDetector(
-                        onTap: () {
-                          _pageController.jumpToPage(idx);
-                          _onPlaceSelected(idx);
-                        },
-                        child: Column(
-                          children: [
-                            Icon(
-                                place['icon'],
-                                color: isSelected ? Colors.red : place['color'],
-                                size: isSelected ? 45 : 35
-                            ),
-                            if (isSelected)
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(place['name'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            top: 50,
-            left: 16,
-            child: CircleAvatar(
-              backgroundColor: const Color(0xFF1A2D33),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
+          Text(
+            name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
-          Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            height: 150,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _facultyPlaces.length,
-              onPageChanged: (index) => _onPlaceSelected(index),
-              itemBuilder: (context, index) {
-                final place = _facultyPlaces[index];
-                final isSelected = _selectedPlaceIndex == index;
-
-                return GestureDetector(
-                  onTap: () => _onPlaceSelected(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 80,
-                          decoration: BoxDecoration(
-                            color: place['color'].withOpacity(0.15),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              bottomLeft: Radius.circular(20),
-                            ),
-                          ),
-                          child: Icon(place['icon'], size: 35, color: place['color']),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  place['name'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A2D33),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  place['desc'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                if (isSelected)
-                                  Row(
-                                    children: const [
-                                      Icon(Icons.directions_walk, size: 14, color: Colors.blue),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        "FOLLOW PATH",
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+          const SizedBox(height: 6),
+          Text(
+            distance,
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
         ],
       ),

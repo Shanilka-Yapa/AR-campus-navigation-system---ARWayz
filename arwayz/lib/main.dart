@@ -7,7 +7,7 @@ import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
 import 'google_map_page.dart';
-import 'insidefac.dart'; // Fixed: Added missing semicolon
+import 'insidefac.dart';
 import 'package:geolocator/geolocator.dart';
 
 void main() async {
@@ -228,11 +228,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           builder: (context) => const ARCameraPage())),
                 ),
                 _buildBottomIconButton(
-                  icon: Icons.near_me,
+                  icon: Icons.map,
                   onTap: _handleMapNavigation,
                 ),
                 _buildBottomIconButton(
-                  icon: Icons.map,
+                  icon: Icons.near_me,
                   onTap: () {
                     Navigator.push(
                       context,
