@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart'; // Clipboard
 import 'package:share_plus/share_plus.dart'; // Share
+import 'ar_display_page.dart'; // AR Display
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});
@@ -42,16 +43,17 @@ class _QRScannerPageState extends State<QRScannerPage> {
             content: Text('Scanned QR code is not a valid URL:\n$urlString'),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK')),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
             ],
           ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error opening link: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error opening link: $e')));
     }
   }
 
@@ -88,7 +90,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
                   color: Colors.white,
                   elevation: 6,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -96,13 +99,39 @@ class _QRScannerPageState extends State<QRScannerPage> {
                         Text(
                           scannedCode,
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
+                            // View in AR
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ARDisplayPage(qrCode: scannedCode),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.view_in_ar),
+                              label: const Text('AR View'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  9,
+                                  126,
+                                  139,
+                                ),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+
                             // Open in browser
                             ElevatedButton.icon(
                               onPressed: () => _openUrl(scannedCode),
@@ -114,10 +143,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
                             ElevatedButton.icon(
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: scannedCode));
+                                  ClipboardData(text: scannedCode),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Copied to clipboard')),
+                                    content: Text('Copied to clipboard'),
+                                  ),
                                 );
                               },
                               icon: const Icon(Icons.copy),
@@ -127,8 +158,10 @@ class _QRScannerPageState extends State<QRScannerPage> {
                             // Share
                             ElevatedButton.icon(
                               onPressed: () {
-                                Share.share(scannedCode,
-                                    subject: 'QR Code Link');
+                                Share.share(
+                                  scannedCode,
+                                  subject: 'QR Code Link',
+                                );
                               },
                               icon: const Icon(Icons.share),
                               label: const Text('Share'),

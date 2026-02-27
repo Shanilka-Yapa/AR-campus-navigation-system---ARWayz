@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'splash_page.dart';
 import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
-
+import 'ar_display_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,17 +50,13 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => BuildingAreasPage(
-            buildingId: buildingId,
-          ),
+          builder: (context) => BuildingAreasPage(buildingId: buildingId),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid Building ID'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid Building ID')));
     }
   }
 
@@ -84,12 +80,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:null,
+      appBar: null,
       body: Stack(
         children: [
           // Background image
@@ -110,9 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ARCameraPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const ARCameraPage()),
                 );
               },
               child: const Icon(Icons.camera_alt, color: Colors.white),
@@ -151,7 +143,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-
                     const SizedBox(height: 20),
                     TextField(
                       textAlign: TextAlign.center,
@@ -160,10 +151,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20), // round corners
+                          borderRadius: BorderRadius.circular(
+                            20,
+                          ), // round corners
                           borderSide: BorderSide.none, // remove default border
                         ),
-                        prefixIcon: Icon(Icons.location_city, color: Color(0xFF1A2D33)),
+                        prefixIcon: Icon(
+                          Icons.location_city,
+                          color: Color(0xFF1A2D33),
+                        ),
                         hintText: 'Enter Building ID', // only hint
                         hintStyle: TextStyle(
                           color: Colors.grey[600],
@@ -189,14 +185,19 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1A2D33), // Button background color
-                        foregroundColor: Colors.white,       // Default color for text & icon (optional, already set above)
+                        backgroundColor: Color(
+                          0xFF1A2D33,
+                        ), // Button background color
+                        foregroundColor: Colors
+                            .white, // Default color for text & icon (optional, already set above)
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20), // Rounded corners
+                          borderRadius: BorderRadius.circular(
+                            20,
+                          ), // Rounded corners
                         ),
                       ),
                     ),
@@ -215,11 +216,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,       // Row only takes the space it needs
-                        mainAxisAlignment: MainAxisAlignment.center, // Centers content
+                        mainAxisSize: MainAxisSize
+                            .min, // Row only takes the space it needs
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // Centers content
                         children: const [
-                          Icon(Icons.qr_code_scanner, color: Color(0xFF1A2D33)), // Icon at start
-                          SizedBox(width: 10),                                   // Space between icon and text
+                          Icon(
+                            Icons.qr_code_scanner,
+                            color: Color(0xFF1A2D33),
+                          ), // Icon at start
+                          SizedBox(width: 10), // Space between icon and text
                           Text(
                             'Scan QR Code',
                             style: TextStyle(
@@ -229,6 +235,31 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ARDisplayPage(qrCode: 'AR_DEMO_MODE'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.view_in_ar),
+                      label: const Text('AR Demo'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A2D33),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                     ),
                   ],
