@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_places_flutter/google_places_flutter.dart';
 
 class GoogleMapPage extends StatefulWidget {
   const GoogleMapPage({super.key});
@@ -15,7 +16,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
 
-  final LatLng _destination = const LatLng(6.0793684, 80.1919646); // FoE UoR
+  LatLng _destination = const LatLng(6.0793684, 80.1919646);
   final TextEditingController _searchController = TextEditingController();
 
   Set<Marker> _markers = {};
@@ -23,10 +24,27 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
 
   final String googleApiKey = "YOUR_REAL_GOOGLE_MAPS_API_KEY";
 
+  // Faculty circle boundary
+  final LatLng _facultyCenter = LatLng(6.0793684, 80.1919646);
+  final double _facultyRadius = 500; // meters
+
+  // Campus places
   final List<Map<String, dynamic>> campusPlaces = [
-    {'name': 'FoE UoR', 'lat': 6.0793684, 'lng': 80.1919646},
-    {'name': 'Library', 'lat': 6.0805, 'lng': 80.1928},
-    {'name': 'Canteen', 'lat': 6.0789, 'lng': 80.1905},
+    {'name': 'Administration Building', 'lat': 6.079416859527051, 'lng': 80.19201064963008},
+    {'name': 'CEE', 'lat': 6.078164889030307, 'lng': 80.1914069593956, 'type': 'building'},
+    {'name': 'MME', 'lat': 6.07859285299213, 'lng': 80.19170316455609, 'type': 'building'},
+    {'name': 'EIE', 'lat': 6.078235704870035, 'lng': 80.19216766168712, 'type': 'building'},
+    {'name': 'Main Cafeteria', 'lat': 6.078713286039461, 'lng': 80.19253361063727, 'type': 'cafeteria'},
+    {'name': 'Faculty Library', 'lat': 6.079367213340776, 'lng': 80.19153075282063, 'type': 'library'},
+    {'name': 'Faculty Auditorium', 'lat': 6.0791364229092055, 'lng': 80.19126639090263, 'type': 'auditorium'},
+    {'name': 'Faculty Playground', 'lat': 6.081236252406866, 'lng': 80.19091511916912, 'type': 'playground'},
+    {'name': 'FoE Quarters', 'lat': 6.080658084327748, 'lng': 80.19018714697019, 'type': 'hostel'},
+    {'name': 'Hostel B', 'lat': 6.078065483420608, 'lng': 80.19276081564473, 'type': 'hostel'},
+    {'name': 'Hostel A', 'lat': 6.077860310832621, 'lng': 80.19304316527848, 'type': 'hostel'},
+    {'name': 'Boys Hostel D', 'lat': 6.081582404604873, 'lng': 80.18952163605634, 'type': 'hostel'},
+    {'name': 'Gymnasium', 'lat': 6.0808828638193315, 'lng': 80.19118258134027, 'type': 'gym'},
+    {'name': 'Bo Maluwa', 'lat': 6.079505589725185, 'lng': 80.19106937366881, 'type': 'building'},
+    {'name': 'Hela Bojun Cafeteria', 'lat': 6.078723433792474, 'lng': 80.19283111418744, 'type': 'cafeteria'},
   ];
 
   @override
@@ -35,7 +53,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
     _getCurrentLocation();
   }
 
-  // 📍 GET CURRENT LOCATION
+  // Get current location
   Future<void> _getCurrentLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
 
@@ -49,9 +67,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
           Marker(
             markerId: const MarkerId("current"),
             position: _currentLocation!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueBlue,
-            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
           ),
         );
         _markers.add(
@@ -62,13 +78,31 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
         );
       });
 
+      if (_isInsideFaculty()) {
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_facultyCenter, 17),
+        );
+      }
+
       await _fetchRoute();
     }
   }
 
-  // 🧭 FETCH REAL ROUTE
+  // Check if inside faculty
+  bool _isInsideFaculty() {
+    if (_currentLocation == null) return false;
+    double distance = Geolocator.distanceBetween(
+      _currentLocation!.latitude,
+      _currentLocation!.longitude,
+      _facultyCenter.latitude,
+      _facultyCenter.longitude,
+    );
+    return distance <= _facultyRadius;
+  }
+
+  // Fetch route using Google Directions API
   Future<void> _fetchRoute() async {
-    if (_currentLocation == null) return;
+    if (_currentLocation == null || _destination == null) return;
 
     final url =
         "https://maps.googleapis.com/maps/api/directions/json"
@@ -85,6 +119,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
       final decodedPoints = _decodePolyline(points);
 
       setState(() {
+        _polylines.clear();
         _polylines.add(
           Polyline(
             polylineId: const PolylineId("route"),
@@ -97,7 +132,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
     }
   }
 
-  // 🔓 POLYLINE DECODER
+  // Decode polyline
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> poly = [];
     int index = 0, lat = 0, lng = 0;
@@ -125,41 +160,6 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
     return poly;
   }
 
-  // 🔍 SEARCH PLACE
-  Future<void> _searchPlace(String query) async {
-    final url =
-        "https://maps.googleapis.com/maps/api/geocode/json"
-        "?address=$query&key=$googleApiKey";
-
-    final response = await http.get(Uri.parse(url));
-    final data = jsonDecode(response.body);
-
-    if (data['results'].isNotEmpty) {
-      final loc = data['results'][0]['geometry']['location'];
-      final LatLng pos = LatLng(loc['lat'], loc['lng']);
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(pos, 17),
-      );
-    }
-  }
-
-  // 📏 NEAREST 2 LOCATIONS
-  List<Map<String, dynamic>> getNearestPlaces() {
-    if (_currentLocation == null) return [];
-
-    for (var place in campusPlaces) {
-      place['distance'] = Geolocator.distanceBetween(
-        _currentLocation!.latitude,
-        _currentLocation!.longitude,
-        place['lat'],
-        place['lng'],
-      );
-    }
-
-    campusPlaces.sort((a, b) => a['distance'].compareTo(b['distance']));
-    return campusPlaces.take(2).toList();
-  }
-
   void _centerToDestination() {
     _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(_destination, 17),
@@ -176,14 +176,12 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    final nearestPlaces = getNearestPlaces();
-
     return Scaffold(
       body: _currentLocation == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                // 🗺️ MAP
+                // Google Map
                 GoogleMap(
                   initialCameraPosition: CameraPosition(
                     target: _currentLocation!,
@@ -197,7 +195,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
                   },
                 ),
 
-                // 🔙 BACK BUTTON
+                // Back button
                 Positioned(
                   top: 45,
                   left: 16,
@@ -210,7 +208,7 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
                   ),
                 ),
 
-                // 🔍 SEARCH BAR
+                // Search bar
                 Positioned(
                   top: 45,
                   left: 60,
@@ -227,41 +225,80 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      onSubmitted: _searchPlace,
-                      decoration: const InputDecoration(
+                    child: GooglePlaceAutoCompleteTextField(
+                      textEditingController: _searchController,
+                      googleAPIKey: googleApiKey,
+                      inputDecoration: const InputDecoration(
                         hintText: "Where are you going?",
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.search),
                       ),
+                      debounceTime: 800,
+                      isLatLngRequired: true,
+                      getPlaceDetailWithLatLng: (prediction) {
+                        double lat = double.parse(prediction.lat!);
+                        double lng = double.parse(prediction.lng!);
+                        _mapController?.animateCamera(
+                          CameraUpdate.newLatLngZoom(LatLng(lat, lng), 17),
+                        );
+                      },
                     ),
                   ),
                 ),
 
-                // 🪪 NEAREST CARDS
+                // Inside/Outside message
+                Positioned(
+                  top: 110,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _isInsideFaculty() ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _isInsideFaculty()
+                          ? "You are inside the Faculty"
+                          : "You are outside of the Faculty",
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
+                // All campus place cards
                 Positioned(
                   bottom: 30,
                   left: 16,
                   right: 16,
                   child: SizedBox(
-                    height: 100,
+                    height: 110,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      children: nearestPlaces.map((p) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: _placeCard(
-                            p['name'],
-                            "${p['distance'].toStringAsFixed(0)} m",
-                          ),
+                      children: campusPlaces.map((p) {
+                        double distance = 0;
+                        if (_currentLocation != null) {
+                          distance = Geolocator.distanceBetween(
+                            _currentLocation!.latitude,
+                            _currentLocation!.longitude,
+                            p['lat'] ?? 0.0,
+                            p['lng'] ?? 0.0,
+                          );
+                        }
+
+                        return _placeCard(
+                          p['name'] ?? 'Unknown',
+                          "${distance.toStringAsFixed(0)} m",
+                          p['lat'] ?? 0.0,
+                          p['lng'] ?? 0.0,
+                          p['type'] ?? 'building',
                         );
                       }).toList(),
                     ),
                   ),
                 ),
 
-                // 🧭 NAV BUTTONS
+                // Navigation buttons
                 Positioned(
                   bottom: 30,
                   right: 16,
@@ -271,16 +308,14 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
                         heroTag: "dest",
                         backgroundColor: const Color(0xFF1A2D33),
                         onPressed: _centerToDestination,
-                        child: const Icon(Icons.navigation,
-                            color: Colors.white),
+                        child: const Icon(Icons.navigation, color: Colors.white),
                       ),
                       const SizedBox(height: 10),
                       FloatingActionButton(
                         heroTag: "curr",
                         backgroundColor: const Color(0xFF1A2D33),
                         onPressed: _centerToCurrentLocation,
-                        child:
-                            const Icon(Icons.my_location, color: Colors.white),
+                        child: const Icon(Icons.my_location, color: Colors.white),
                       ),
                     ],
                   ),
@@ -290,37 +325,101 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
     );
   }
 
-  Widget _placeCard(String name, String distance) {
-    return Container(
-      width: 180,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 6,
+  // Place card with icon
+  Widget _placeCard(
+      String name, String distance, double lat, double lng, String type) {
+    IconData icon;
+    switch (type) {
+      case 'library':
+        icon = Icons.menu_book;
+        break;
+      case 'cafeteria':
+        icon = Icons.restaurant;
+        break;
+      case 'hostel':
+        icon = Icons.home;
+        break;
+      case 'gym':
+        icon = Icons.fitness_center;
+        break;
+      case 'auditorium':
+        icon = Icons.theater_comedy;
+        break;
+      case 'playground':
+        icon = Icons.sports_soccer;
+        break;
+      default:
+        icon = Icons.location_on;
+    }
+
+    return GestureDetector(
+      onTap: () async {
+        _destination = LatLng(lat, lng);
+
+        _markers.removeWhere((m) => m.markerId.value == "destination");
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("destination"),
+            position: _destination,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+        );
+
+        _polylines.clear();
+        await _fetchRoute();
+
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_destination, 18),
+        );
+
+        setState(() {});
+      },
+      child: Container(
+        width: 180,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [Color.fromARGB(255, 6, 50, 117), Color.fromARGB(255, 86, 128, 192)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(255, 17, 13, 146).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            distance,
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              distance,
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
