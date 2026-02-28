@@ -1,0 +1,10 @@
+# ninja log v5
+39	2024	7938856522390179	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	74810d7fa84c961a
+66	2038	7938856522390179	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	64d9438594dd30b1
+0	2069	7938856522832310	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	dc9db054b53855bf
+82	2091	7938856523097736	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	7c0c8d6ca08a0b4a
+11	2162	7938856523789920	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	14856fb74c7c8c5e
+97	2417	7938856526379636	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	2fde572e0042c5ac
+53	2425	7938856526424016	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	252af02a20575a10
+25	2569	7938856527910096	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	1eb97f1b6bc0b3d3
+2570	2843	7938856530656398	C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/1y1k1i6v/obj/arm64-v8a/libgame.so	9362e4f9ca33c7da

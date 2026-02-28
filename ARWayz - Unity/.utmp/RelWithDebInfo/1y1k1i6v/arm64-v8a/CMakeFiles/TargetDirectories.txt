@@ -1,0 +1,5 @@
+C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/.utmp/RelWithDebInfo/1y1k1i6v/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/.utmp/RelWithDebInfo/1y1k1i6v/arm64-v8a/CMakeFiles/rebuild_cache.dir
+C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/.utmp/RelWithDebInfo/1y1k1i6v/arm64-v8a/GameActivity/CMakeFiles/game.dir
+C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/.utmp/RelWithDebInfo/1y1k1i6v/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+C:/Shanilka/AR-campus-navigation-system---ARWayz/ARWayz - Unity/.utmp/RelWithDebInfo/1y1k1i6v/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir
