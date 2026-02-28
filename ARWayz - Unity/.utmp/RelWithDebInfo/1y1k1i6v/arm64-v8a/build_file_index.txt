@@ -1,0 +1,2 @@
+C:\Shanilka\AR-campus-navigation-system---ARWayz\ARWayz - Unity\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Shanilka\AR-campus-navigation-system---ARWayz\ARWayz - Unity\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
