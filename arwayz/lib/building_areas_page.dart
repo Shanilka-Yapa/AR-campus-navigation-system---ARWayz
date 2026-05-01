@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // Import your main.dart for navigation
+// Import your main.dart for navigation
 
 class BuildingAreasPage extends StatelessWidget {
   final String buildingId;
