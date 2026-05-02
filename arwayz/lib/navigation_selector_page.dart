@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'ar_compass_navigation_page.dart';
+import 'route_preview_page.dart';
 import 'outdoor_navigation_page.dart';
 
 class NavigationSelectorPage extends StatelessWidget {
@@ -53,11 +53,10 @@ class NavigationSelectorPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ARCompassNavigationPage(
+                      builder: (context) => RoutePreviewPage(
                         destLat: lat,
-                        destLon: lon,
-                        destName: destName,
-                        locationType: type,
+                        destLng: lon,
+                        placeName: destName,
                       ),
                     ),
                   );

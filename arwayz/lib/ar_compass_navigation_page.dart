@@ -1,11 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
-import 'package:flutter_compass/flutter_compass.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
 
-/// AR Compass Navigation - Shows green arrow pointing to destination
-/// Works outdoors and indoors without GPS waypoint accuracy issues
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_compass/flutter_compass.dart';
+import 'package:geolocator/geolocator.dart';
+
+/// AR Navigation — ground-path style.
+///
+/// Paints a perspective green path on the camera feed with animated
+/// chevron arrows flowing toward the destination.
+/// No floating centre icon. No compass widget.
 class ARCompassNavigationPage extends StatefulWidget {
   final double destLat;
   final double destLon;
@@ -27,802 +32,735 @@ class ARCompassNavigationPage extends StatefulWidget {
 
 class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     with TickerProviderStateMixin {
-  late CameraController _cameraController;
+  // ── camera ────────────────────────────────────────────────────
+  CameraController? _cam;
+  bool _camReady = false;
+
+  // ── sensors ───────────────────────────────────────────────────
   double _heading = 0;
   double _bearing = 0;
   double _distance = 0;
-  Position? _currentLocation;
-  bool _isInitialized = false;
+  Position? _position;
+  bool _locationReady = false;
+  _GpsMode _gpsMode = _GpsMode.acquiring;
+  bool _arrived = false;
   String? _error;
-  bool _hasArrivedAtDestination = false;
-  late AnimationController _celebrationAnimationController;
-  late Animation<double> _celebrationScaleAnimation;
-  late Animation<double> _celebrationOpacityAnimation;
+
+  // ── animations ────────────────────────────────────────────────
+  late AnimationController _flowCtrl;
+  late AnimationController _celebCtrl;
+  late Animation<double> _celebScale;
+  late Animation<double> _celebOpacity;
+
+  // ── colours ───────────────────────────────────────────────────
+  static const _green = Color(0xFF2ECC71);
+  static const _darkCard = Color(0xF2111111);
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
-    _startHeadingUpdates();
-    _startLocationUpdates();
-    
-    // Initialize celebration animations
-    _celebrationAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+    _flowCtrl = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+
+    _celebCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _celebScale = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _celebCtrl, curve: Curves.elasticOut),
+    );
+    _celebOpacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _celebCtrl, curve: Curves.easeIn),
     );
 
-    _celebrationScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _celebrationAnimationController, curve: Curves.elasticOut),
-    );
-
-    _celebrationOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _celebrationAnimationController, curve: Curves.easeIn),
-    );
+    _initCamera();
+    _startHeading();
+    _startLocation();
   }
 
   @override
   void dispose() {
-    _cameraController.dispose();
-    _celebrationAnimationController.dispose();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _cam?.dispose();
+    _flowCtrl.dispose();
+    _celebCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _initializeCamera() async {
+  // ── Init ──────────────────────────────────────────────────────
+
+  Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() => _error = 'No camera found');
+        setState(() => _error = 'No camera');
         return;
       }
-
-      final backCamera = cameras.first;
-      _cameraController = CameraController(
-        backCamera,
+      final ctrl = CameraController(
+        cameras.first,
         ResolutionPreset.high,
         enableAudio: false,
       );
-
-      await _cameraController.initialize();
-
-      if (mounted) {
-        setState(() => _isInitialized = true);
-      }
+      await ctrl.initialize();
+      _cam = ctrl;
+      if (mounted) setState(() => _camReady = true);
     } catch (e) {
-      if (mounted) {
-        setState(() => _error = 'Camera error: $e');
-      }
+      if (mounted) setState(() => _error = 'Camera error: $e');
     }
   }
 
-  void _startHeadingUpdates() {
-    FlutterCompass.events?.listen((event) {
-      if (mounted) {
-        setState(() {
-          _heading = event.heading ?? 0;
-        });
-      }
+  void _startHeading() {
+    FlutterCompass.events?.listen((e) {
+      if (mounted) setState(() => _heading = e.heading ?? 0);
     });
   }
 
-  void _startLocationUpdates() async {
-    // Check permissions
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+  void _startLocation() async {
+    var perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied) {
+      perm = await Geolocator.requestPermission();
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      if (mounted) {
-        setState(() => _error = 'Location permission denied');
-      }
+    if (perm == LocationPermission.deniedForever) {
+      if (mounted) setState(() => _error = 'Location permission denied');
       return;
     }
 
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 1, // Update every 1 meter
-      ),
-    ).listen((Position position) {
-      if (mounted) {
-        setState(() {
-          _currentLocation = position;
-          _calculateBearingAndDistance();
-        });
-      }
+    _listenAt(LocationAccuracy.best);
+
+    Future.delayed(const Duration(seconds: 10), () {
+      if (!mounted || _locationReady) return;
+      setState(() => _gpsMode = _GpsMode.network);
+      _listenAt(LocationAccuracy.medium);
+    });
+
+    Future.delayed(const Duration(seconds: 20), () {
+      if (!mounted || _locationReady) return;
+      setState(() => _gpsMode = _GpsMode.compassOnly);
     });
   }
 
-  /// Calculates bearing (direction) and distance to destination
-  void _calculateBearingAndDistance() {
-    if (_currentLocation == null) return;
+  void _listenAt(LocationAccuracy accuracy) {
+    Geolocator.getPositionStream(
+      locationSettings: LocationSettings(accuracy: accuracy, distanceFilter: 1),
+    ).listen((pos) {
+      if (!mounted) return;
+      setState(() {
+        _position = pos;
+        _locationReady = true;
+        _gpsMode = accuracy == LocationAccuracy.best
+            ? _GpsMode.gps
+            : _GpsMode.network;
+        _recalculate();
+      });
+    });
+  }
 
-    final lat1 = _currentLocation!.latitude * math.pi / 180;
-    final lon1 = _currentLocation!.longitude * math.pi / 180;
+  // ── Maths ─────────────────────────────────────────────────────
+
+  void _recalculate() {
+    if (_position == null) return;
+    final lat1 = _position!.latitude * math.pi / 180;
+    final lon1 = _position!.longitude * math.pi / 180;
     final lat2 = widget.destLat * math.pi / 180;
     final lon2 = widget.destLon * math.pi / 180;
 
-    // Calculate bearing using formula
     final y = math.sin(lon2 - lon1) * math.cos(lat2);
-    final x =
-        math.cos(lat1) * math.sin(lat2) -
+    final x = math.cos(lat1) * math.sin(lat2) -
         math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1);
-
     _bearing = (math.atan2(y, x) * 180 / math.pi + 360) % 360;
 
-    // Calculate distance using Haversine formula
-    const earthRadius = 6371000; // meters
     final dLat = lat2 - lat1;
     final dLon = lon2 - lon1;
-
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(lat1) *
             math.cos(lat2) *
             math.sin(dLon / 2) *
             math.sin(dLon / 2);
+    _distance = 6371000 * 2 * math.asin(math.sqrt(a));
 
-    final c = 2 * math.asin(math.sqrt(a));
-    _distance = earthRadius * c;
-
-    print('DEBUG: Distance to destination is: $_distance meters');
-
-    // Check if arrived at destination (within 15 meters)
-    if (_distance < 15 && !_hasArrivedAtDestination) {
-      _hasArrivedAtDestination = true;
-      _celebrationAnimationController.forward();
-      _showArrivalCelebration();
+    if (_distance < 15 && !_arrived) {
+      _arrived = true;
+      _celebCtrl.forward();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showArrival());
     }
   }
 
-  /// Calculate angle to rotate arrow (relative to device heading)
-  double _getArrowAngle() {
-    final angle = (_bearing - _heading) % 360;
-    return angle * math.pi / 180;
+  double get _angleDiff {
+    final a = (_bearing - _heading) % 360;
+    return a > 180 ? a - 360 : a;
   }
 
-  /// Get direction instruction: "Turn Left", "Turn Right", "Go Straight"
-  String _getDirectionInstruction() {
-    final angle = ((_bearing - _heading) % 360);
-
-    // Normalize angle to -180 to 180
-    double normalizedAngle = angle > 180 ? angle - 360 : angle;
-
-    if (normalizedAngle > -20 && normalizedAngle < 20) {
-      return "GO STRAIGHT";
-    } else if (normalizedAngle >= 20 && normalizedAngle <= 180) {
-      return "TURN LEFT";
-    } else {
-      return "TURN RIGHT";
-    }
+  _Direction get _direction {
+    final d = _angleDiff;
+    if (d > -22 && d < 22) return _Direction.straight;
+    return d >= 22 ? _Direction.right : _Direction.left;
   }
 
-  /// Get color based on direction
-  Color _getDirectionColor() {
-    final instruction = _getDirectionInstruction();
-    if (instruction == "GO STRAIGHT") {
-      return Colors.green;
-    } else if (instruction == "TURN LEFT") {
-      return Colors.blue;
-    } else {
-      return Colors.orange;
-    }
-  }
+  // ── Helpers ───────────────────────────────────────────────────
 
-  /// Get emoji icon for direction
-  String _getDirectionIcon() {
-    final instruction = _getDirectionInstruction();
-    if (instruction == "GO STRAIGHT") {
-      return "⬆️";
-    } else if (instruction == "TURN LEFT") {
-      return "⬅️";
-    } else {
-      return "➡️";
-    }
-  }
+  String _fmtDist(double m) => m < 1000
+      ? '${m.toStringAsFixed(0)} m'
+      : '${(m / 1000).toStringAsFixed(2)} km';
 
-  /// Get emoji icon for location type
-  String _getLocationIcon() {
-    switch (widget.locationType) {
-      case 'admin':
-        return '🏛️';
-      case 'building':
-        return '🏢';
-      case 'cafeteria':
-        return '🍽️';
-      case 'library':
-        return '📚';
-      case 'auditorium':
-        return '🎭';
-      case 'playground':
-        return '🎪';
-      case 'hostel':
-        return '🏠';
-      case 'gym':
-        return '🏋️';
-      default:
-        return '📍';
-    }
-  }
+  String get _locationIcon => switch (widget.locationType) {
+        'admin' => '🏛️',
+        'cafeteria' => '🍽️',
+        'library' => '📚',
+        'auditorium' => '🎭',
+        'gym' => '🏋️',
+        'hostel' => '🏠',
+        _ => '🏢',
+      };
 
-  /// Get color for location type
-  Color _getLocationColor() {
-    switch (widget.locationType) {
-      case 'admin':
-        return Colors.purple;
-      case 'cafeteria':
-        return Colors.orange;
-      case 'library':
-        return Colors.indigo;
-      case 'auditorium':
-        return Colors.red;
-      case 'gym':
-        return Colors.redAccent;
-      case 'hostel':
-        return Colors.amber;
-      default:
-        return Colors.blue;
-    }
-  }
+  Color get _locationColor => switch (widget.locationType) {
+        'admin' => const Color(0xFFAB47BC),
+        'cafeteria' => const Color(0xFFFF7043),
+        'library' => const Color(0xFF5C6BC0),
+        'auditorium' => const Color(0xFFEF5350),
+        'gym' => const Color(0xFFEC407A),
+        'hostel' => const Color(0xFFFFCA28),
+        _ => const Color(0xFF29B6F6),
+      };
 
-  /// Get description for location type
-  String _getLocationTypeLabel() {
-    switch (widget.locationType) {
-      case 'admin':
-        return 'Administration';
-      case 'cafeteria':
-        return 'Cafeteria';
-      case 'library':
-        return 'Library';
-      case 'auditorium':
-        return 'Auditorium';
-      case 'gym':
-        return 'Gymnasium';
-      case 'hostel':
-        return 'Hostel';
-      default:
-        return 'Building';
-    }
-  }
+  (String, IconData) get _directionInfo => switch (_direction) {
+        _Direction.straight => ('Straight ahead', Icons.arrow_upward_rounded),
+        _Direction.left => ('Turn left', Icons.turn_left_rounded),
+        _Direction.right => ('Turn right', Icons.turn_right_rounded),
+      };
 
-  /// Format distance with appropriate units
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.toStringAsFixed(0)}m';
-    } else {
-      return '${(meters / 1000).toStringAsFixed(2)}km';
-    }
-  }
+  // ── Arrival dialog ────────────────────────────────────────────
 
-  /// Show arrival celebration pop-up
-  void _showArrivalCelebration() {
+  void _showArrival() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return _buildArrivalCelebration();
-      },
-    );
-  }
-
-  /// Build the animated arrival celebration dialog
-  Widget _buildArrivalCelebration() {
-    return ScaleTransition(
-      scale: _celebrationScaleAnimation,
-      child: FadeTransition(
-        opacity: _celebrationOpacityAnimation,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  _getLocationColor().withOpacity(0.95),
-                  _getLocationColor().withOpacity(0.7),
+      builder: (_) => ScaleTransition(
+        scale: _celebScale,
+        child: FadeTransition(
+          opacity: _celebOpacity,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
+              decoration: BoxDecoration(
+                color: _darkCard,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: _green, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                      color: _green.withOpacity(0.3),
+                      blurRadius: 40,
+                      spreadRadius: 4),
                 ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getLocationColor().withOpacity(0.8),
-                  blurRadius: 50,
-                  spreadRadius: 20,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(_locationIcon, style: const TextStyle(fontSize: 60)),
+                const SizedBox(height: 14),
+                const Text(
+                  'You Have Arrived',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700),
                 ),
-                BoxShadow(
-                  color: _getLocationColor().withOpacity(0.4),
-                  blurRadius: 100,
-                  spreadRadius: 40,
+                const SizedBox(height: 6),
+                Text(
+                  widget.destName,
+                  style: TextStyle(
+                      color: _green,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Ripple effect circles
-                Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 2,
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
                     ),
-                  ),
-                ),
-                Container(
-                  width: 220,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-
-                // Content
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Location emoji
-                    Text(
-                      _getLocationIcon(),
-                      style: const TextStyle(fontSize: 80),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Celebration text
-                    const Text(
-                      '🎉 YOU ARRIVED! 🎉',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Destination name
-                    Text(
-                      widget.destName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Location type
-                    Text(
-                      _getLocationTypeLabel(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Close button
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: _getLocationColor(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        elevation: 5,
-                      ),
-                      icon: const Icon(Icons.check_circle, size: 24),
-                      label: const Text(
-                        'Great! Done',
+                    child: const Text('Done',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1)),
+                  ),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
       ),
     );
   }
+
+  // ── Build ─────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    if (_error != null) return _errorScreen();
+
+    final mq = MediaQuery.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.destName),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: _buildBody(),
-    );
-  }
+      backgroundColor: Colors.black,
+      body: Stack(fit: StackFit.expand, children: [
+        // 1 ── Camera feed
+        _camReady && _cam != null
+            ? CameraPreview(_cam!)
+            : const ColoredBox(
+                color: Colors.black,
+                child: Center(
+                    child: CircularProgressIndicator(color: _green))),
 
-  Widget _buildBody() {
-    if (_error != null) {
-      return _buildErrorScreen();
-    }
+        // 2 ── AR ground-path overlay
+        if (_camReady)
+          AnimatedBuilder(
+            animation: _flowCtrl,
+            builder: (_, __) => CustomPaint(
+              painter: _GroundPathPainter(
+                angleDiff: _locationReady ? _angleDiff : 0,
+                flowValue: _flowCtrl.value,
+                pathColor: _green,
+              ),
+            ),
+          ),
 
-    if (!_isInitialized) {
-      return const Center(child: CircularProgressIndicator());
-    }
+        // 3 ── Top bar
+        _topBar(mq),
 
-    return Stack(
-      children: [
-        // Camera feed background
-        CameraPreview(_cameraController),
-
-        // AR Direction Pop-up at top
+        // 4 ── Destination badge below top bar
         Positioned(
-          top: 40,
+          top: mq.padding.top + 66,
           left: 0,
           right: 0,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: _getDirectionColor().withOpacity(0.9),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getDirectionColor().withOpacity(0.5),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _getDirectionInstruction(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getDirectionIcon(),
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          child: Center(child: _destBadge()),
         ),
 
-        // Overlay - AR compass arrow
-        Center(
-          child: Transform.rotate(
-            angle: _getArrowAngle(),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Arrow icon with glow effect
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Glow effect
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.6),
-                            blurRadius: 30,
-                            spreadRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Arrow
-                    Icon(Icons.arrow_upward, size: 80, color: Colors.green),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // 3D AR Location Marker (animated)
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        _getLocationColor().withOpacity(0.8),
-                        _getLocationColor().withOpacity(0.3),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getLocationColor().withOpacity(0.7),
-                        blurRadius: 40,
-                        spreadRadius: 15,
-                      ),
-                      BoxShadow(
-                        color: _getLocationColor().withOpacity(0.4),
-                        blurRadius: 60,
-                        spreadRadius: 20,
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Ripple animation effect
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _getLocationColor().withOpacity(0.5),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      // Location icon
-                      Text(
-                        _getLocationIcon(),
-                        style: const TextStyle(fontSize: 50),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 3D AR Label
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getLocationColor().withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getLocationColor().withOpacity(0.6),
-                        blurRadius: 15,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    _getLocationTypeLabel(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Destination info card
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.green.withOpacity(0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        widget.destName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatDistance(_distance),
-                        style: const TextStyle(
-                          color: Colors.greenAccent,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Top info panel - Heading and bearing
+        // 5 ── Bottom white card
         Positioned(
-          top: 16,
           left: 16,
           right: 16,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildInfoBox('HEADING', '${_heading.toStringAsFixed(0)}°'),
-                _buildInfoBox('BEARING', '${_bearing.toStringAsFixed(0)}°'),
-                _buildInfoBox(
-                  'ANGLE',
-                  '${(_bearing - _heading).toStringAsFixed(0)}°',
-                ),
-              ],
-            ),
-          ),
+          bottom: mq.padding.bottom + 20,
+          child: _bottomCard(),
         ),
 
-        // Bottom controls
-        Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Back button
-                FloatingActionButton.extended(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Close'),
-                  backgroundColor: Colors.red.shade700,
-                ),
-
-                // Compass recalibration hint
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Keep device level for best results',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Arrived notification
-        if (_distance < 20)
+        // 6 ── Arrived strip (only live after GPS fix)
+        if (_locationReady && _distance < 15)
           Positioned(
-            top: 100,
-            left: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade700,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 28),
-                  SizedBox(width: 12),
-                  Text(
-                    'You have arrived!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            top: mq.padding.top + 120,
+            left: 20,
+            right: 20,
+            child: _arrivalStrip(),
           ),
-      ],
+      ]),
     );
   }
 
-  Widget _buildErrorScreen() {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.red.shade100,
-          borderRadius: BorderRadius.circular(12),
+  // ── Top bar ───────────────────────────────────────────────────
+
+  Widget _topBar(MediaQueryData mq) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new,
+                    color: Colors.white, size: 17),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Row(children: [
+                  Text(_locationIcon,
+                      style: const TextStyle(fontSize: 17)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.destName,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(width: 10),
+            _gpsChip(),
+          ]),
         ),
+      ),
+    );
+  }
+
+  Widget _gpsChip() {
+    final (color, icon, label) = switch (_gpsMode) {
+      _GpsMode.gps => (Colors.greenAccent, Icons.gps_fixed, 'GPS'),
+      _GpsMode.network => (Colors.orange, Icons.wifi, 'NET'),
+      _GpsMode.compassOnly => (Colors.redAccent, Icons.signal_wifi_off, 'NO'),
+      _GpsMode.acquiring => (Colors.white54, Icons.radar, '···'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.6)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, color: color, size: 13),
+        const SizedBox(width: 4),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+      ]),
+    );
+  }
+
+  // ── Destination badge ─────────────────────────────────────────
+
+  Widget _destBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.45),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: Colors.white30, width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black45, blurRadius: 16, spreadRadius: 1),
+        ],
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(_locationIcon, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 8),
+        Text(
+          widget.destName,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2),
+        ),
+      ]),
+    );
+  }
+
+  // ── Bottom card ───────────────────────────────────────────────
+
+  Widget _bottomCard() {
+    final (label, icon) = _directionInfo;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black38,
+              blurRadius: 20,
+              offset: const Offset(0, 6)),
+        ],
+      ),
+      child: _locationReady
+          ? Row(children: [
+              // Direction icon
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: _green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: _green, size: 25),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _fmtDist(_distance),
+                      style: const TextStyle(
+                          color: Colors.black45, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              // Location type pill
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _locationColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: _locationColor.withOpacity(0.3)),
+                ),
+                child: Text(_locationIcon,
+                    style: const TextStyle(fontSize: 22)),
+              ),
+            ])
+          : _gpsWaitRow(),
+    );
+  }
+
+  Widget _gpsWaitRow() {
+    final (msg, sub) = switch (_gpsMode) {
+      _GpsMode.acquiring =>
+        ('Acquiring GPS…', 'Searching for satellite signal'),
+      _GpsMode.network =>
+        ('Network location…', 'Using WiFi / cell towers'),
+      _GpsMode.compassOnly =>
+        ('No signal', 'Move near a window or go outdoors'),
+      _GpsMode.gps => ('', ''),
+    };
+    return Row(children: [
+      if (_gpsMode != _GpsMode.compassOnly)
+        const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: _green))
+      else
+        const Icon(Icons.signal_wifi_off_rounded,
+            color: Colors.orange, size: 20),
+      const SizedBox(width: 14),
+      Expanded(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.red.shade700),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Unknown error',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.red.shade700),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Go Back'),
-            ),
+            Text(msg,
+                style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600)),
+            Text(sub,
+                style: const TextStyle(
+                    color: Colors.black45, fontSize: 12)),
           ],
         ),
       ),
+    ]);
+  }
+
+  Widget _arrivalStrip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade900.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _green.withOpacity(0.5)),
+      ),
+      child: Row(children: [
+        const Icon(Icons.check_circle_rounded, color: _green, size: 22),
+        const SizedBox(width: 10),
+        const Text('You have arrived!',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700)),
+      ]),
     );
   }
 
-  Widget _buildInfoBox(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+  Widget _errorScreen() => Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 52, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              Text(_error ?? 'Unknown error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white70, fontSize: 15)),
+              const SizedBox(height: 28),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Go Back'),
+              ),
+            ]),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.greenAccent,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+      );
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Ground-path CustomPainter
+//
+//  Draws a perspective-correct green trapezoid on the bottom half
+//  of the screen, with animated white chevron arrows flowing from
+//  the bottom toward the vanishing point — just like the reference.
+//
+//  angleDiff < 0  → path curves left
+//  angleDiff > 0  → path curves right
+//  angleDiff ≈ 0  → path goes straight up
+// ═══════════════════════════════════════════════════════════════
+class _GroundPathPainter extends CustomPainter {
+  final double angleDiff;
+  final double flowValue; // 0→1 looping
+  final Color pathColor;
+
+  const _GroundPathPainter({
+    required this.angleDiff,
+    required this.flowValue,
+    required this.pathColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Vanishing point shifts left/right with direction
+    final double vpX = size.width / 2 +
+        (angleDiff.clamp(-90.0, 90.0) / 90.0) * size.width * 0.32;
+    final double vpY = size.height * 0.40;
+    final vp = Offset(vpX, vpY);
+
+    const double halfBase = 115; // half-width at bottom of screen
+    const double halfTop = 16;   // half-width at vanishing point
+
+    final bl = Offset(size.width / 2 - halfBase, size.height);
+    final br = Offset(size.width / 2 + halfBase, size.height);
+    final vl = Offset(vpX - halfTop, vpY);
+    final vr = Offset(vpX + halfTop, vpY);
+
+    // ── 1. Filled gradient path ───────────────────────────────
+    final pathShape = Path()
+      ..moveTo(bl.dx, bl.dy)
+      ..lineTo(vl.dx, vl.dy)
+      ..lineTo(vr.dx, vr.dy)
+      ..lineTo(br.dx, br.dy)
+      ..close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          pathColor.withOpacity(0.50),
+          pathColor.withOpacity(0.22),
+          pathColor.withOpacity(0.0),
+        ],
+        stops: const [0.0, 0.55, 1.0],
+      ).createShader(Rect.fromPoints(Offset(vpX, size.height), vp));
+
+    canvas.drawPath(pathShape, fillPaint);
+
+    // ── 2. Edge lines ─────────────────────────────────────────
+    final edgePaint = Paint()
+      ..color = pathColor.withOpacity(0.45)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(bl, vl, edgePaint);
+    canvas.drawLine(br, vr, edgePaint);
+
+    // ── 3. Chevron arrows ─────────────────────────────────────
+    // 5 chevrons animated from bottom toward vanishing point.
+    // Each is a simple ">" / "V" shape (pointing upward = toward dest).
+    const int chevronCount = 5;
+    for (int i = 0; i < chevronCount; i++) {
+      // Raw t: 0 = bottom, 1 = top; staggered by index + animation phase
+      double t = ((i / chevronCount) + flowValue) % 1.0;
+
+      // Quadratic ease: chevrons bunch near horizon (realistic perspective)
+      final double tP = t * t;
+
+      // Centre position interpolated between bottom-centre and vanishing pt
+      final double cx =
+          _lerp(size.width / 2, vpX, tP);
+      final double cy = _lerp(size.height, vpY, tP);
+
+      // Width and height shrink with perspective
+      final double hw = _lerp(halfBase * 0.52, halfTop * 0.7, tP);
+      final double ch = _lerp(30.0, 7.0, tP);
+
+      // Fade near horizon and near base
+      final double alpha = math.sin(t * math.pi).clamp(0.15, 1.0);
+
+      final chevPaint = Paint()
+        ..color = Colors.white.withOpacity(alpha * 0.92)
+        ..strokeWidth = _lerp(3.2, 1.0, tP)
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+
+      // V-shape pointing upward
+      final chevPath = Path()
+        ..moveTo(cx - hw, cy + ch / 2)
+        ..lineTo(cx, cy - ch / 2)
+        ..lineTo(cx + hw, cy + ch / 2);
+
+      canvas.drawPath(chevPath, chevPaint);
+    }
+  }
+
+  static double _lerp(double a, double b, double t) => a + (b - a) * t;
+
+  @override
+  bool shouldRepaint(_GroundPathPainter old) =>
+      old.flowValue != flowValue || old.angleDiff != angleDiff;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Enums
+// ═══════════════════════════════════════════════════════════════
+
+enum _Direction { straight, left, right }
+
+enum _GpsMode { acquiring, network, compassOnly, gps }
