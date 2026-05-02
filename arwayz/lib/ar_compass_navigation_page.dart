@@ -166,6 +166,8 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     final c = 2 * math.asin(math.sqrt(a));
     _distance = earthRadius * c;
 
+    print('DEBUG: Distance to destination is: $_distance meters');
+
     // Check if arrived at destination (within 15 meters)
     if (_distance < 15 && !_hasArrivedAtDestination) {
       _hasArrivedAtDestination = true;
