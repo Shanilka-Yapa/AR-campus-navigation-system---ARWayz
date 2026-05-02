@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
+import 'Building_Details_page.dart';
 
 /// AR Compass Navigation - Shows green arrow pointing to destination
 /// Works outdoors and indoors without GPS waypoint accuracy issues
@@ -38,6 +39,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
   late AnimationController _celebrationAnimationController;
   late Animation<double> _celebrationScaleAnimation;
   late Animation<double> _celebrationOpacityAnimation;
+  final VoiceNavigationService _voice = VoiceNavigationService(); // ✅ voice field
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     _initializeCamera();
     _startHeadingUpdates();
     _startLocationUpdates();
-    
+
     // Initialize celebration animations
     _celebrationAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -61,8 +63,10 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     );
   }
 
+  // ✅ FIXED: dispose() is correctly INSIDE the class
   @override
   void dispose() {
+    _voice.dispose();                          // ✅ stop TTS
     _cameraController.dispose();
     _celebrationAnimationController.dispose();
     super.dispose();
@@ -122,7 +126,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.best,
-        distanceFilter: 1, // Update every 1 meter
+        distanceFilter: 1,
       ),
     ).listen((Position position) {
       if (mounted) {
@@ -143,32 +147,27 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     final lat2 = widget.destLat * math.pi / 180;
     final lon2 = widget.destLon * math.pi / 180;
 
-    // Calculate bearing using formula
     final y = math.sin(lon2 - lon1) * math.cos(lat2);
     final x =
         math.cos(lat1) * math.sin(lat2) -
-        math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1);
+            math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1);
 
     _bearing = (math.atan2(y, x) * 180 / math.pi + 360) % 360;
 
-    // Calculate distance using Haversine formula
-    const earthRadius = 6371000; // meters
+    const earthRadius = 6371000;
     final dLat = lat2 - lat1;
     final dLon = lon2 - lon1;
 
     final a =
         math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) *
-            math.cos(lat2) *
-            math.sin(dLon / 2) *
-            math.sin(dLon / 2);
+            math.cos(lat1) *
+                math.cos(lat2) *
+                math.sin(dLon / 2) *
+                math.sin(dLon / 2);
 
     final c = 2 * math.asin(math.sqrt(a));
     _distance = earthRadius * c;
 
-    print('DEBUG: Distance to destination is: $_distance meters');
-
-    // Check if arrived at destination (within 15 meters)
     if (_distance < 15 && !_hasArrivedAtDestination) {
       _hasArrivedAtDestination = true;
       _celebrationAnimationController.forward();
@@ -182,20 +181,30 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     return angle * math.pi / 180;
   }
 
-  /// Get direction instruction: "Turn Left", "Turn Right", "Go Straight"
+  // ✅ FIXED: single clean method — no nested function, no dead return statements
+  /// Get direction instruction and speak via TTS when direction changes
   String _getDirectionInstruction() {
     final angle = ((_bearing - _heading) % 360);
-
-    // Normalize angle to -180 to 180
     double normalizedAngle = angle > 180 ? angle - 360 : angle;
 
+    NavigationDirection dir;
+    String label;
+
     if (normalizedAngle > -20 && normalizedAngle < 20) {
-      return "GO STRAIGHT";
+      dir   = NavigationDirection.straight;
+      label = "GO STRAIGHT";
     } else if (normalizedAngle >= 20 && normalizedAngle <= 180) {
-      return "TURN LEFT";
+      dir   = NavigationDirection.left;
+      label = "TURN LEFT";
     } else {
-      return "TURN RIGHT";
+      dir   = NavigationDirection.right;
+      label = "TURN RIGHT";
     }
+
+    // Speaks only when direction changes (debounced inside VoiceNavigationService)
+    _voice.onDirectionUpdate(dir);
+
+    return label;
   }
 
   /// Get color based on direction
@@ -340,7 +349,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Ripple effect circles
                 Container(
                   width: 280,
                   height: 280,
@@ -363,20 +371,15 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                     ),
                   ),
                 ),
-
-                // Content
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Location emoji
                     Text(
                       _getLocationIcon(),
                       style: const TextStyle(fontSize: 80),
                     ),
                     const SizedBox(height: 20),
-
-                    // Celebration text
                     const Text(
                       '🎉 YOU ARRIVED! 🎉',
                       style: TextStyle(
@@ -388,8 +391,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-
-                    // Destination name
                     Text(
                       widget.destName,
                       style: const TextStyle(
@@ -400,8 +401,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-
-                    // Location type
                     Text(
                       _getLocationTypeLabel(),
                       style: TextStyle(
@@ -411,8 +410,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Close button
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -469,10 +466,8 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
 
     return Stack(
       children: [
-        // Camera feed background
         CameraPreview(_cameraController),
 
-        // AR Direction Pop-up at top
         Positioned(
           top: 40,
           left: 0,
@@ -518,18 +513,15 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
           ),
         ),
 
-        // Overlay - AR compass arrow
         Center(
           child: Transform.rotate(
             angle: _getArrowAngle(),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Arrow icon with glow effect
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Glow effect
                     Container(
                       width: 100,
                       height: 100,
@@ -544,14 +536,12 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                         ],
                       ),
                     ),
-                    // Arrow
-                    Icon(Icons.arrow_upward, size: 80, color: Colors.green),
+                    const Icon(Icons.arrow_upward, size: 80, color: Colors.green),
                   ],
                 ),
 
                 const SizedBox(height: 24),
 
-                // 3D AR Location Marker (animated)
                 Container(
                   width: 100,
                   height: 100,
@@ -579,7 +569,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Ripple animation effect
                       Container(
                         width: 100,
                         height: 100,
@@ -591,7 +580,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                           ),
                         ),
                       ),
-                      // Location icon
                       Text(
                         _getLocationIcon(),
                         style: const TextStyle(fontSize: 50),
@@ -602,7 +590,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
 
                 const SizedBox(height: 24),
 
-                // 3D AR Label
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -636,7 +623,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
 
                 const SizedBox(height: 24),
 
-                // Destination info card
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -678,7 +664,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
           ),
         ),
 
-        // Top info panel - Heading and bearing
         Positioned(
           top: 16,
           left: 16,
@@ -703,7 +688,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
           ),
         ),
 
-        // Bottom controls
         Positioned(
           bottom: 20,
           left: 0,
@@ -713,15 +697,12 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Back button
                 FloatingActionButton.extended(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                   label: const Text('Close'),
                   backgroundColor: Colors.red.shade700,
                 ),
-
-                // Compass recalibration hint
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -741,7 +722,6 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
           ),
         ),
 
-        // Arrived notification
         if (_distance < 20)
           Positioned(
             top: 100,

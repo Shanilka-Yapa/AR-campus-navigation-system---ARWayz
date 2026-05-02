@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
 import 'splash_page.dart';
@@ -6,13 +7,10 @@ import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
 import 'navigation_selector_page.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'admin_login_page.dart';
+import 'Building_Details_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -47,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _buildingIdController = TextEditingController();
 
+  // Unified Submit Logic
   void _onSubmit() {
     final buildingId = _buildingIdController.text.trim();
 
@@ -54,13 +53,24 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => BuildingAreasPage(buildingId: buildingId),
+          builder: (context) => BuildingDetailsPage(
+            building: sampleBuilding,
+            onStartArNavigation: () {
+              Navigator.pop(context); // Close details
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BuildingAreasPage(buildingId: buildingId),
+                ),
+              );
+            },
+          ),
         ),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid Building ID')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid Building ID')),
+      );
     }
   }
 
@@ -70,6 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  final ImagePicker _picker = ImagePicker();
+
   Future<void> _openCamera() async {
     final result = await Navigator.push(
       context,
@@ -78,7 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (result != null) {
       print("Got QR code: $result");
-      // You can handle the scanned code here
     }
   }
 
@@ -88,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: null,
       body: Stack(
         children: [
-          // Background image
+          // 1. Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -97,14 +108,43 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          //Camera open for AR
+
+          // 2. Destination Info Button (Bottom Left) — Hirushi's Feature
+          // Locate this button in your main.dart inside the Stack
+          Positioned(
+            bottom: 30,
+            left: 20,
+            child: FloatingActionButton.extended(
+              heroTag: 'newFeatureBtn',
+              backgroundColor: const Color(0xFF4ECDC4),
+              onPressed: () {
+                // CHANGE: Navigate to the List of Buildings instead of a single one
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CampusSelectorPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.list_alt_rounded, color: Color(0xFF1A2D33)), // Changed icon to 'list'
+              label: const Text(
+                "All Buildings", // Changed label for clarity
+                style: TextStyle(
+                  color: Color(0xFF1A2D33),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Navigation Buttons (Bottom Right) — unchanged
           Positioned(
             bottom: 30,
             right: 20,
             child: Column(
               children: [
-                // NEW: AR Compass Navigation (Practical AR Solution)
                 FloatingActionButton(
+                  heroTag: 'btn1',
                   backgroundColor: Colors.green.shade700,
                   onPressed: () {
                     Navigator.push(
@@ -122,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
+                  heroTag: 'btn2',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
@@ -136,6 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
+                  heroTag: 'btn3',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
@@ -151,13 +193,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
           ),
-          //Back button
+
+          // 4. Back button — unchanged
           Positioned(
-            top: 40, //adjust for status bar
+            top: 40,
             left: 16,
             child: GestureDetector(
               onTap: () {
-                SystemNavigator.pop(); // <- This exits the app
+                SystemNavigator.pop();
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -170,40 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          // Secret Admin Button (top right)
-          Positioned(
-            top: 40,
-            right: 16,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AdminLoginPage(),
-                  ),
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.admin_panel_settings,
-                  color: Colors.grey.shade600,
-                  size: 18,
-                ),
-              ),
-            ),
-          ),
-
-          /* Dark overlay
-          Container(
-            color: Colors.black.withOpacity(0.45),
-          ),*/
-
-          // Foreground content
+          // 5. Foreground content (Input and Search) — unchanged
           Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -220,16 +230,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // round corners
-                          borderSide: BorderSide.none, // remove default border
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
                         ),
-                        prefixIcon: Icon(
+                        prefixIcon: const Icon(
                           Icons.location_city,
                           color: Color(0xFF1A2D33),
                         ),
-                        hintText: 'Enter Building ID', // only hint
+                        hintText: 'Enter Building ID',
                         hintStyle: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
@@ -241,32 +249,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: _onSubmit,
-                      icon: Icon(
-                        Icons.send, // Example icon
-                        color: Colors.white, // Icon color
-                      ),
-                      label: Text(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      label: const Text(
                         'Submit',
                         style: TextStyle(
-                          color: Colors.white, // Text color
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(
-                          0xFF1A2D33,
-                        ), // Button background color
-                        foregroundColor: Colors
-                            .white, // Default color for text & icon (optional, already set above)
+                        backgroundColor: const Color(0xFF1A2D33),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // Rounded corners
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                     ),
@@ -285,16 +284,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize
-                            .min, // Row only takes the space it needs
-                        mainAxisAlignment:
-                            MainAxisAlignment.center, // Centers content
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(
                             Icons.qr_code_scanner,
                             color: Color(0xFF1A2D33),
-                          ), // Icon at start
-                          SizedBox(width: 10), // Space between icon and text
+                          ),
+                          SizedBox(width: 10),
                           Text(
                             'Scan QR Code',
                             style: TextStyle(
