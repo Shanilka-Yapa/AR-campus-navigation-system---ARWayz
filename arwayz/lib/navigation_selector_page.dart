@@ -24,26 +24,24 @@ class NavigationSelectorPage extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          // Convert Firebase data to our list format
-          // ... inside your StreamBuilder builder ...
-
-        final List<(String, double, double, String)> liveCampusPlaces = 
-            snapshot.data!.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          
-          // Match the fields exactly as they appear in image_cec220.png
-          return (
-            (data['name'] ?? 'Unknown') as String,
-            (data['latitude'] ?? 6.0794) as double,  // Pulling from 'latitude' field
-            (data['longitude'] ?? 80.192) as double, // Pulling from 'longitude' field
-            (data['type'] ?? 'admin') as String,     // Default to admin if missing
-          );
-        }).toList();
+          // Convert Firebase data to our list format using your specific fields
+          final List<(String, double, double, String)> liveCampusPlaces = 
+              snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            
+            return (
+              (data['name'] ?? 'Unknown') as String,
+              (data['latitude'] ?? 6.0794) as double,
+              (data['longitude'] ?? 80.192) as double,
+              (data['type'] ?? 'building') as String,
+            );
+          }).toList();
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               const SizedBox(height: 16),
+              // --- AR NAVIGATION CARD ---
               _buildMethodCard(
                 context,
                 title: '🧭 AR Compass Arrow',
@@ -65,13 +63,14 @@ class NavigationSelectorPage extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 16),
+              // --- GOOGLE MAPS CARD ---
               _buildMethodCard(
                 context,
                 title: '🗺️ Google Maps',
                 subtitle: 'Traditional map-based navigation',
                 description: 'Full map view with markers, directions, and turn-by-turn guidance.',
                 color: Colors.blue,
-                destinations: const [],
+                destinations: liveCampusPlaces, // Now shows your buildings here too!
                 onSelect: (destName, lat, lon, type) {
                   Navigator.push(
                     context,
@@ -90,7 +89,7 @@ class NavigationSelectorPage extends StatelessWidget {
     );
   }
 
-  // --- HELPER FUNCTIONS (The parts that were missing) ---
+  // --- HELPER FUNCTIONS ---
 
   Widget _buildMethodCard(
     BuildContext context, {
@@ -104,83 +103,67 @@ class NavigationSelectorPage extends StatelessWidget {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: destinations.isEmpty
-            ? () => onSelect('University', 6.0789, 80.1922, 'building')
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: const TextStyle(fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Select a destination:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
               ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: const TextStyle(fontSize: 13, height: 1.5),
-              ),
-              if (destinations.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Quick navigate to:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: destinations.map((dest) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        onSelect(dest.$1, dest.$2, dest.$3, dest.$4);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color.withOpacity(0.8),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
+            ),
+            const SizedBox(height: 8),
+            if (destinations.isEmpty)
+              const Text("No buildings found in database.", style: TextStyle(fontSize: 12, color: Colors.red))
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: destinations.map((dest) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      // This uses the specific lat/lon for the button you click!
+                      onSelect(dest.$1, dest.$2, dest.$3, dest.$4);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: color.withOpacity(0.8),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      child: Text(
-                        dest.$1,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ] else ...[
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    onSelect('University', 6.0789, 80.1922, 'building');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Open Maps'),
-                ),
-              ],
-            ],
-          ),
+                    ),
+                    child: Text(
+                      dest.$1,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
         ),
       ),
     );
@@ -218,8 +201,7 @@ class NavigationSelectorPage extends StatelessWidget {
               '🧭 AR Compass Arrow:\n'
               '• Works with or without GPS\n'
               '• Keep device level\n'
-              '• Arrow points to destination\n'
-              '• Shows real-time distance',
+              '• Arrow points to destination',
               style: TextStyle(fontSize: 12, height: 1.6),
             ),
             SizedBox(height: 12),
@@ -229,7 +211,6 @@ class NavigationSelectorPage extends StatelessWidget {
               '🗺️ Google Maps:\n'
               '• Full map interface\n'
               '• Requires internet\n'
-              '• Shows multiple routes\n'
               '• Complete turn-by-turn',
               style: TextStyle(fontSize: 12, height: 1.6),
             ),
