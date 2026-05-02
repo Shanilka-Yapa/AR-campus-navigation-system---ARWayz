@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
 import 'splash_page.dart';
@@ -9,12 +8,11 @@ import 'outdoor_navigation_page.dart';
 import 'navigation_selector_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'admin_login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -71,8 +69,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _buildingIdController.dispose();
     super.dispose();
   }
-
-  final ImagePicker _picker = ImagePicker();
 
   Future<void> _openCamera() async {
     final result = await Navigator.push(
@@ -170,6 +166,34 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 padding: const EdgeInsets.all(8),
                 child: const Icon(Icons.arrow_back, color: Colors.black),
+              ),
+            ),
+          ),
+
+          // Secret Admin Button (top right)
+          Positioned(
+            top: 40,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminLoginPage(),
+                  ),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  Icons.admin_panel_settings,
+                  color: Colors.grey.shade600,
+                  size: 18,
+                ),
               ),
             ),
           ),
