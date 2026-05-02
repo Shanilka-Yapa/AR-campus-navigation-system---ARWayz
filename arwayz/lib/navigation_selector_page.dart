@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'ar_compass_navigation_page.dart';
 import 'outdoor_navigation_page.dart';
 
-/// Navigation method selector - Choose between AR Compass or Google Maps
-
 class NavigationSelectorPage extends StatelessWidget {
   const NavigationSelectorPage({super.key});
-
-  // All campus locations with real coordinates
-  static const List<(String, double, double, String)> campusPlaces = [
-    ('Administration Building', 6.079416859527051, 80.19201064963008, 'admin'),
-    ('CEE', 6.078164889030307, 80.1914069593956, 'building'),
-    ('MME', 6.07859285299213, 80.19170316455609, 'building'),
-    ('EIE', 6.078235704870035, 80.19216766168712, 'building'),
-    ('Main Cafeteria', 6.078713286039461, 80.19253361063727, 'cafeteria'),
-    ('Faculty Library', 6.079367213340776, 80.19153075282063, 'library'),
-    ('Faculty Auditorium', 6.0791364229092055, 80.19126639090263, 'auditorium'),
-    ('Faculty Playground', 6.081236252406866, 80.19091511916912, 'playground'),
-    ('FoE Quarters', 6.080658084327748, 80.19018714697019, 'hostel'),
-    ('Hostel B', 6.078065483420608, 80.19276081564473, 'hostel'),
-    ('Hostel A', 6.077860310832621, 80.19304316527848, 'hostel'),
-    ('Boys Hostel D', 6.081582404604873, 80.18952163605634, 'hostel'),
-    ('Gymnasium', 6.0808828638193315, 80.19118258134027, 'gym'),
-    ('Bo Maluwa', 6.079505589725185, 80.19106937366881, 'building'),
-    ('Hela Bojun Cafeteria', 6.078723433792474, 80.19283111418744, 'cafeteria'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -33,56 +13,85 @@ class NavigationSelectorPage extends StatelessWidget {
         title: const Text('Choose Navigation Method'),
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const SizedBox(height: 16),
-          _buildMethodCard(
-            context,
-            title: '🧭 AR Compass Arrow',
-            subtitle: 'Realtime pointing arrow in camera',
-            description:
-                'Green arrow + turn-by-turn directions + 3D AR marker at destination.',
-            color: Colors.green,
-            destinations: campusPlaces,
-            onSelect: (destName, lat, lon, type) {
-              Navigator.push(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('buildings').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // Convert Firebase data to our list format
+          // ... inside your StreamBuilder builder ...
+
+        final List<(String, double, double, String)> liveCampusPlaces = 
+            snapshot.data!.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          
+          // Match the fields exactly as they appear in image_cec220.png
+          return (
+            (data['name'] ?? 'Unknown') as String,
+            (data['latitude'] ?? 6.0794) as double,  // Pulling from 'latitude' field
+            (data['longitude'] ?? 80.192) as double, // Pulling from 'longitude' field
+            (data['type'] ?? 'admin') as String,     // Default to admin if missing
+          );
+        }).toList();
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const SizedBox(height: 16),
+              _buildMethodCard(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ARCompassNavigationPage(
-                    destLat: lat,
-                    destLon: lon,
-                    destName: destName,
-                    locationType: type,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildMethodCard(
-            context,
-            title: '🗺️ Google Maps',
-            subtitle: 'Traditional map-based navigation',
-            description:
-                'Full map view with markers, directions, and turn-by-turn guidance.',
-            color: Colors.blue,
-            destinations: const [],
-            onSelect: (destName, lat, lon, type) {
-              Navigator.push(
+                title: '🧭 AR Compass Arrow',
+                subtitle: 'Realtime pointing arrow in camera',
+                description: 'Green arrow + turn-by-turn directions + 3D AR marker at destination.',
+                color: Colors.green,
+                destinations: liveCampusPlaces,
+                onSelect: (destName, lat, lon, type) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ARCompassNavigationPage(
+                        destLat: lat,
+                        destLon: lon,
+                        destName: destName,
+                        locationType: type,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildMethodCard(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const OutdoorNavigationPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildInfoCard(),
-        ],
+                title: '🗺️ Google Maps',
+                subtitle: 'Traditional map-based navigation',
+                description: 'Full map view with markers, directions, and turn-by-turn guidance.',
+                color: Colors.blue,
+                destinations: const [],
+                onSelect: (destName, lat, lon, type) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OutdoorNavigationPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildInfoCard(),
+            ],
+          );
+        },
       ),
     );
   }
+
+  // --- HELPER FUNCTIONS (The parts that were missing) ---
 
   Widget _buildMethodCard(
     BuildContext context, {
@@ -141,7 +150,6 @@ class NavigationSelectorPage extends StatelessWidget {
                   children: destinations.map((dest) {
                     return ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
                         onSelect(dest.$1, dest.$2, dest.$3, dest.$4);
                       },
                       style: ElevatedButton.styleFrom(
@@ -163,7 +171,6 @@ class NavigationSelectorPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
                     onSelect('University', 6.0789, 80.1922, 'building');
                   },
                   style: ElevatedButton.styleFrom(
@@ -188,12 +195,12 @@ class NavigationSelectorPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.blue.shade200),
       ),
-      child: Padding(
+      child: const Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.info_outline, color: Colors.blue),
                 SizedBox(width: 8),
@@ -207,8 +214,8 @@ class NavigationSelectorPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               '🧭 AR Compass Arrow:\n'
               '• Works with or without GPS\n'
               '• Keep device level\n'
@@ -216,10 +223,10 @@ class NavigationSelectorPage extends StatelessWidget {
               '• Shows real-time distance',
               style: TextStyle(fontSize: 12, height: 1.6),
             ),
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Divider(),
+            SizedBox(height: 12),
+            Text(
               '🗺️ Google Maps:\n'
               '• Full map interface\n'
               '• Requires internet\n'

@@ -7,9 +7,14 @@ import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
 import 'navigation_selector_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
