@@ -6,6 +6,7 @@ import 'splash_page.dart';
 import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
+import 'navigation_selector_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,6 +102,24 @@ class _MyHomePageState extends State<MyHomePage> {
             right: 20,
             child: Column(
               children: [
+                // NEW: AR Compass Navigation (Practical AR Solution)
+                FloatingActionButton(
+                  backgroundColor: Colors.green.shade700,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NavigationSelectorPage(),
+                      ),
+                    );
+                  },
+                  tooltip: 'AR Navigation',
+                  child: const Icon(
+                    Icons.compass_calibration,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 FloatingActionButton(
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
@@ -111,8 +130,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.navigation, color: Colors.white),
                   tooltip: 'Navigate to University',
+                  child: const Icon(Icons.navigation, color: Colors.white),
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
@@ -125,8 +144,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.camera_alt, color: Colors.white),
                   tooltip: 'Open Camera',
+                  child: const Icon(Icons.camera_alt, color: Colors.white),
                 ),
               ],
             ),

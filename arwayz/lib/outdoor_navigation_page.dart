@@ -90,12 +90,10 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   }
 
   void _animateToDestination() {
-    if (mapController != null) {
-      mapController.animateCamera(
-        CameraUpdate.newLatLngBounds(_calculateBounds(), 100),
-      );
+    mapController.animateCamera(
+      CameraUpdate.newLatLngBounds(_calculateBounds(), 100),
+    );
     }
-  }
 
   LatLngBounds _calculateBounds() {
     double minLat = _currentLocation?.latitude ?? DESTINATION.latitude;
