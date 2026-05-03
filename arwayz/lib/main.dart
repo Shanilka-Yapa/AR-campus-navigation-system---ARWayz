@@ -50,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _buildingIdController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // Unified Submit Logic — navigates to BuildingDetailsPage (your feature)
+  // Your feature: BuildingDetailsPage on submit
   void _onSubmit() {
     final buildingId = _buildingIdController.text.trim();
 
@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
           builder: (context) => BuildingDetailsPage(
             building: sampleBuilding,
             onStartArNavigation: () {
-              Navigator.pop(context); // Close details
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          // 2. All Buildings Button (Bottom Left) — your feature
+          // 2. Your feature: All Buildings button (Bottom Left)
           Positioned(
             bottom: 30,
             left: 20,
@@ -151,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CampusSelectorPage(),
+                        builder: (context) => const NavigationSelectorPage(),
                       ),
                     );
                   },
@@ -214,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          // 5. Secret Admin Button (Top Right) — teammate's feature
+          // 5. Teammate's feature: Secret Admin Button (Top Right)
           Positioned(
             top: 40,
             right: 16,
