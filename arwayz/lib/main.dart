@@ -58,24 +58,13 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => BuildingDetailsPage(
-            building: sampleBuilding,
-            onStartArNavigation: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BuildingAreasPage(buildingId: buildingId),
-                ),
-              );
-            },
-          ),
+          builder: (context) => BuildingDetailsPage(building: sampleBuilding),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid Building ID')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid Building ID')));
     }
   }
 
@@ -127,7 +116,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 );
               },
-              icon: const Icon(Icons.list_alt_rounded, color: Color(0xFF1A2D33)),
+              icon: const Icon(
+                Icons.list_alt_rounded,
+                color: Color(0xFF1A2D33),
+              ),
               label: const Text(
                 "All Buildings",
                 style: TextStyle(
@@ -316,10 +308,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
-                          Icon(
-                            Icons.qr_code_scanner,
-                            color: Color(0xFF1A2D33),
-                          ),
+                          Icon(Icons.qr_code_scanner, color: Color(0xFF1A2D33)),
                           SizedBox(width: 10),
                           Text(
                             'Scan QR Code',
