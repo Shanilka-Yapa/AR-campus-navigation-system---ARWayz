@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Color palette
+const Color kPrimaryDark = Color(0xFF1A2D33); // Primary Dark
+const Color kDeepTeal = Color(0xFF235559); // Deep Teal
+const Color kMutedTeal = Color(0xFF3F727A); // Muted Teal
+const Color kSteelBlue = Color(0xFF7B929C); // Steel Blue
+const Color kLightGray = Color(0xFFBEC4C4); // Light Gray
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -11,19 +19,22 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Map<String, dynamic>? _lastDeletedData;
   String? _lastDeletedDocId;
+  Timer? _undoTimer;
+  final ValueNotifier<int> _undoRemaining = ValueNotifier<int>(0);
 
-  Future<void> _undoDelete() async {
+  Future<void> _restoreDeleted() async {
     if (_lastDeletedData == null || _lastDeletedDocId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No deletion to undo.'),
-          backgroundColor: Colors.orange,
+          content: Text('No deletion to restore.'),
+          backgroundColor: kSteelBlue,
         ),
       );
       return;
     }
 
     try {
+      ScaffoldMessenger.of(context).clearSnackBars();
       await FirebaseFirestore.instance
           .collection('buildings')
           .doc(_lastDeletedDocId)
@@ -32,22 +43,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${_lastDeletedData!['name'] ?? 'Destination'} restored.',
-            ),
-            backgroundColor: Colors.blue,
+            content: Text('${_lastDeletedData!['name'] ?? 'Destination'} restored.'),
+            backgroundColor: kDeepTeal,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
 
       _lastDeletedData = null;
       _lastDeletedDocId = null;
-    } catch (error) {
+      _undoTimer?.cancel();
+      _undoRemaining.value = 0;
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error restoring document.'),
-            backgroundColor: Colors.red,
+            backgroundColor: kPrimaryDark,
           ),
         );
       }
@@ -257,7 +269,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('${nameCtrl.text} added!'),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: kDeepTeal,
                                 ),
                               );
                             }
@@ -304,7 +316,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return AlertDialog(
               title: const Text(
                 '⚠️ Delete?',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: kPrimaryDark),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -341,27 +353,63 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     onPressed: () async {
                       if (pwCtrl.text == pw) {
                         setState(() => isDeleting = true);
-                        try {
-                          _lastDeletedData = doc.data() as Map<String, dynamic>;
+                          try {
+                          // save deleted document data so it can be restored if UNDO is pressed
+                          _lastDeletedData = doc.data() as Map<String, dynamic>? ?? {};
                           _lastDeletedDocId = doc.id;
+
                           await doc.reference.delete();
 
                           Navigator.pop(dialogContext);
 
-                          // Show SnackBar immediately after closing dialog
+                          // initialize remaining seconds and show a single SnackBar
+                          _undoTimer?.cancel();
+                          _undoRemaining.value = 5;
+
                           ScaffoldMessenger.of(mainContext).clearSnackBars();
                           ScaffoldMessenger.of(mainContext).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                '${data['name'] ?? 'Destination'} deleted - Press UNDO to restore',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                              content: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${data['name'] ?? 'Destination'} deleted',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  ValueListenableBuilder<int>(
+                                    valueListenable: _undoRemaining,
+                                    builder: (context, value, _) {
+                                      final progress = (value / 5).clamp(0.0, 1.0);
+                                      return Row(
+                                        children: [
+                                          Text(
+                                            '$value',
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              value: progress,
+                                              strokeWidth: 2,
+                                              color: kLightGray,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
-                              backgroundColor: Colors.red[700],
-                              duration: const Duration(seconds: 20),
+                              backgroundColor: kPrimaryDark,
+                              duration: const Duration(seconds: 5),
                               behavior: SnackBarBehavior.floating,
                               margin: const EdgeInsets.all(20),
                               shape: RoundedRectangleBorder(
@@ -370,19 +418,34 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               elevation: 10,
                               action: SnackBarAction(
                                 label: 'UNDO',
-                                textColor: Colors.yellow[300],
-                                onPressed: () {
-                                  _undoDelete();
+                                textColor: kLightGray,
+                                onPressed: () async {
+                                  _undoTimer?.cancel();
+                                  await _restoreDeleted();
                                 },
                               ),
                             ),
                           );
+
+                          // countdown timer updates the ValueNotifier (no snackbar recreation)
+                          _undoTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+                            final next = _undoRemaining.value - 1;
+                            _undoRemaining.value = next;
+                            if (next <= 0) {
+                              t.cancel();
+                              _lastDeletedData = null;
+                              _lastDeletedDocId = null;
+                              try {
+                                ScaffoldMessenger.of(mainContext).hideCurrentSnackBar();
+                              } catch (_) {}
+                            }
+                          });
                         } catch (e) {
                           Navigator.pop(dialogContext);
                           ScaffoldMessenger.of(mainContext).showSnackBar(
                             const SnackBar(
                               content: Text('Error deleting'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: kPrimaryDark,
                             ),
                           );
                         } finally {
@@ -392,14 +455,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ScaffoldMessenger.of(mainContext).showSnackBar(
                           const SnackBar(
                             content: Text('Wrong password'),
-                            backgroundColor: Colors.red,
+                            backgroundColor: kPrimaryDark,
                           ),
                         );
                       }
                     },
                     child: const Text(
                       'Delete',
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(color: kPrimaryDark),
                     ),
                   ),
               ],
@@ -413,7 +476,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Admin Dashboard")),
+      appBar: AppBar(
+        backgroundColor: kPrimaryDark,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Admin Dashboard",
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('buildings').snapshots(),
         builder: (context, snapshot) {
@@ -425,17 +496,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.domain, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
+                children: [
+                  const Icon(Icons.domain, size: 64, color: kSteelBlue),
+                  const SizedBox(height: 16),
                   Text(
                     'No destinations',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(fontSize: 16, color: kLightGray),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Click + to add',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(fontSize: 14, color: kLightGray),
                   ),
                 ],
               ),
@@ -479,7 +550,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   desc,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                    color: kLightGray.withOpacity(0.9),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -488,7 +559,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
+                            icon: const Icon(Icons.delete, color: kPrimaryDark),
                             onPressed: () => _deleteDestination(context, doc),
                           ),
                         ],
@@ -497,19 +568,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: kMutedTeal.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.blue.shade200),
+                          border: Border.all(color: kMutedTeal.withOpacity(0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Coordinates:',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
+                                color: kDeepTeal,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -535,9 +606,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDestinationDialog,
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+        backgroundColor: kDeepTeal,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _undoTimer?.cancel();
+    _undoRemaining.dispose();
+    super.dispose();
   }
 }
