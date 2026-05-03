@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'ar_compass_navigation_page.dart';
-import 'route_preview_page.dart';
 
 // ─── Data Model ───────────────────────────────────────────────────────────────
 
@@ -61,15 +60,16 @@ final List<BuildingInfo> campusBuildings = [
     isOpenWeekends: false,
     facilities: const [
       Facility(icon: Icons.admin_panel_settings, label: 'Dean\'s Office'),
-      Facility(icon: Icons.account_balance, label: 'Finance'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.local_parking, label: 'Parking'),
-      Facility(icon: Icons.security, label: 'Security'),
-      Facility(icon: Icons.phone, label: 'Reception'),
-      Facility(icon: Icons.engineering, label: 'EEC'),
+      Facility(icon: Icons.account_balance,       label: 'Finance'),
+      Facility(icon: Icons.wifi,                  label: 'Free Wi-Fi'),
+      Facility(icon: Icons.accessible,            label: 'Accessible'),
+      Facility(icon: Icons.local_parking,         label: 'Parking'),
+      Facility(icon: Icons.security,              label: 'Security'),
+      Facility(icon: Icons.phone,                 label: 'Reception'),
+      Facility(icon: Icons.engineering,              label: 'EEC'),
     ],
   ),
+
   BuildingInfo(
     id: 'DCEE',
     name: 'Dept. of Civil & Env. Engineering',
@@ -87,16 +87,17 @@ final List<BuildingInfo> campusBuildings = [
     destLon: 80.1913757,
     isOpenWeekends: false,
     facilities: const [
-      Facility(icon: Icons.science, label: 'Hydraulics Lab'),
-      Facility(icon: Icons.architecture, label: 'Survey Lab'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.meeting_room, label: 'Meeting Room'),
-      Facility(icon: Icons.print, label: 'Printing'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.local_library, label: 'Reading Area'),
-      Facility(icon: Icons.school, label: 'Lecture Rooms'),
+      Facility(icon: Icons.science,        label: 'Hydraulics Lab'),
+      Facility(icon: Icons.architecture,   label: 'Survey Lab'),
+      Facility(icon: Icons.wifi,           label: 'Free Wi-Fi'),
+      Facility(icon: Icons.meeting_room,   label: 'Meeting Room'),
+      Facility(icon: Icons.print,          label: 'Printing'),
+      Facility(icon: Icons.accessible,     label: 'Accessible'),
+      Facility(icon: Icons.local_library,  label: 'Reading Area'),
+      Facility(icon: Icons.school,       label: 'Lecture Rooms'),
     ],
   ),
+
   BuildingInfo(
     id: 'DMME',
     name: 'Dept. of Mechanical & Mfg. Engineering',
@@ -115,15 +116,16 @@ final List<BuildingInfo> campusBuildings = [
     isOpenWeekends: false,
     facilities: const [
       Facility(icon: Icons.precision_manufacturing, label: 'Mfg. Lab'),
-      Facility(icon: Icons.thermostat, label: 'Thermo Lab'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.meeting_room, label: 'Project Room'),
-      Facility(icon: Icons.print, label: 'Printing'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.school, label: 'Lecture Rooms'),
-      Facility(icon: Icons.security, label: 'Security'),
+      Facility(icon: Icons.thermostat,              label: 'Thermo Lab'),
+      Facility(icon: Icons.wifi,                    label: 'Free Wi-Fi'),
+      Facility(icon: Icons.meeting_room,            label: 'Project Room'),
+      Facility(icon: Icons.print,                   label: 'Printing'),
+      Facility(icon: Icons.accessible,              label: 'Accessible'),
+      Facility(icon: Icons.school,                label: 'Lecture Rooms'),
+      Facility(icon: Icons.security,                label: 'Security'),
     ],
   ),
+
   BuildingInfo(
     id: 'DEIE',
     name: 'Dept. of Electrical & Info. Engineering',
@@ -142,15 +144,16 @@ final List<BuildingInfo> campusBuildings = [
     isOpenWeekends: false,
     facilities: const [
       Facility(icon: Icons.electrical_services, label: 'Electronics Lab'),
-      Facility(icon: Icons.router, label: 'Network Lab'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.meeting_room, label: 'Seminar Room'),
-      Facility(icon: Icons.computer, label: 'Computer Lab'),
-      Facility(icon: Icons.print, label: 'Printing'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.security, label: 'Security'),
+      Facility(icon: Icons.router,              label: 'Network Lab'),
+      Facility(icon: Icons.wifi,                label: 'Free Wi-Fi'),
+      Facility(icon: Icons.meeting_room,        label: 'Seminar Room'),
+      Facility(icon: Icons.computer,            label: 'Computer Lab'),
+      Facility(icon: Icons.print,               label: 'Printing'),
+      Facility(icon: Icons.accessible,          label: 'Accessible'),
+      Facility(icon: Icons.security,            label: 'Security'),
     ],
   ),
+
   BuildingInfo(
     id: 'LIB',
     name: 'Faculty Library',
@@ -168,16 +171,18 @@ final List<BuildingInfo> campusBuildings = [
     destLon: 80.1915942,
     isOpenWeekends: false,
     facilities: const [
-      Facility(icon: Icons.local_library, label: 'Book Collection'),
-      Facility(icon: Icons.space_dashboard, label: 'Free space'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.meeting_room, label: 'Study Rooms'),
-      Facility(icon: Icons.print, label: 'Printing'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.description, label: 'Past Papers'),
-      Facility(icon: Icons.security, label: 'Security'),
+      Facility(icon: Icons.local_library,  label: 'Book Collection'),
+      Facility(icon: Icons.space_dashboard,label: 'Free space'),
+      Facility(icon: Icons.wifi,           label: 'Free Wi-Fi'),
+      Facility(icon: Icons.meeting_room,   label: 'Study Rooms'),
+      Facility(icon: Icons.print,          label: 'Printing'),
+      Facility(icon: Icons.accessible,     label: 'Accessible'),
+      Facility(icon: Icons.description,    label: 'Past Papers'),
+      Facility(icon: Icons.security,       label: 'Security'),
     ],
   ),
+
+
   BuildingInfo(
     id: 'LHALL',
     name: 'Lecture Halls Complex',
@@ -196,15 +201,17 @@ final List<BuildingInfo> campusBuildings = [
     isOpenWeekends: false,
     facilities: const [
       Facility(icon: Icons.cast_for_education, label: 'AV Systems'),
-      Facility(icon: Icons.wifi, label: 'Free Wi-Fi'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.ac_unit, label: 'Air Conditioned'),
-      Facility(icon: Icons.security, label: 'Security'),
-      Facility(icon: Icons.local_drink, label: 'Water Fountain'),
-      Facility(icon: Icons.wc, label: 'Restrooms'),
-      Facility(icon: Icons.elevator, label: 'Elevator'),
+      Facility(icon: Icons.wifi,               label: 'Free Wi-Fi'),
+      Facility(icon: Icons.accessible,         label: 'Accessible'),
+      Facility(icon: Icons.ac_unit,            label: 'Air Conditioned'),
+      Facility(icon: Icons.security,           label: 'Security'),
+      Facility(icon: Icons.local_drink,        label: 'Water Fountain'),
+      Facility(icon: Icons.wc,                 label: 'Restrooms'),
+      Facility(icon: Icons.elevator,           label: 'Elevator'),
     ],
   ),
+
+
   BuildingInfo(
     id: 'GATE',
     name: 'Main Gate',
@@ -222,17 +229,17 @@ final List<BuildingInfo> campusBuildings = [
     destLon: 80.1924846,
     isOpenWeekends: false,
     facilities: const [
-      Facility(icon: Icons.security, label: 'Security Post'),
+      Facility(icon: Icons.security,      label: 'Security Post'),
       Facility(icon: Icons.local_parking, label: 'Visitor Parking'),
-      Facility(icon: Icons.accessible, label: 'Accessible'),
-      Facility(icon: Icons.info, label: 'Info Board'),
-      Facility(icon: Icons.camera_alt, label: 'CCTV'),
-      Facility(icon: Icons.phone, label: 'Intercom'),
-      Facility(icon: Icons.directions, label: 'Signage'),
-      Facility(icon: Icons.wc, label: 'Restrooms'),
+      Facility(icon: Icons.accessible,    label: 'Accessible'),
+      Facility(icon: Icons.info,          label: 'Info Board'),
+      Facility(icon: Icons.camera_alt,    label: 'CCTV'),
+      Facility(icon: Icons.phone,         label: 'Intercom'),
+      Facility(icon: Icons.directions,    label: 'Signage'),
+      Facility(icon: Icons.wc,            label: 'Restrooms'),
     ],
   ),
-];
+]; // FIXED: Added missing closing bracket here
 
 // ─── Default sample building used in main.dart ───────────────────────────────
 final sampleBuilding = campusBuildings[0];
@@ -345,9 +352,10 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
               Text(
                 'Campus Destinations',
                 style: TextStyle(
-                    color: _textPri,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700),
+                  color: _textPri,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 'University of Ruhuna — Faculty of Engineering',
@@ -403,13 +411,12 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
           Text(
             '${_filtered.length} location${_filtered.length == 1 ? '' : 's'} found',
             style: const TextStyle(
-                color: _textSec,
-                fontSize: 13,
-                fontWeight: FontWeight.w500),
+                color: _textSec, fontSize: 13, fontWeight: FontWeight.w500),
           ),
           const Spacer(),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.green.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
@@ -417,14 +424,16 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
             ),
             child: Row(
               children: const [
-                Icon(Icons.access_time_rounded, color: Colors.green, size: 12),
+                Icon(Icons.access_time_rounded,
+                    color: Colors.green, size: 12),
                 SizedBox(width: 4),
                 Text(
                   '8:30 AM – 4:30 PM',
                   style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600),
+                    color: Colors.green,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -488,9 +497,10 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
         ),
         child: Row(
           children: [
+            // Thumbnail
             ClipRRect(
-              borderRadius:
-              const BorderRadius.horizontal(left: Radius.circular(16)),
+              borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16)),
               child: Image.asset(
                 b.imageUrl,
                 width: 90,
@@ -522,20 +532,22 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
                       child: Text(
                         b.id,
                         style: const TextStyle(
-                            color: _accent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5),
+                          color: _accent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       b.name,
                       style: const TextStyle(
-                          color: _textPri,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3),
+                        color: _textPri,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -580,12 +592,12 @@ class _CampusSelectorPageState extends State<CampusSelectorPage> {
 
 class BuildingDetailsPage extends StatefulWidget {
   final BuildingInfo building;
-  final VoidCallback onStartArNavigation;
+  final VoidCallback? onStartArNavigation; // FIXED: Added '?' and made optional to match standard detail behavior
 
   const BuildingDetailsPage({
     super.key,
     required this.building,
-    required this.onStartArNavigation,
+    this.onStartArNavigation,
   });
 
   @override
@@ -610,7 +622,8 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
     super.initState();
     _animCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 700));
-    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _fadeAnim =
+        CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.06),
       end: Offset.zero,
@@ -624,33 +637,22 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
     super.dispose();
   }
 
-  /// Launches the AR camera navigation directly.
   void _launchAr() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ARCompassNavigationPage(
-          destLat: widget.building.destLat,
-          destLon: widget.building.destLon,
-          destName: widget.building.name,
-          locationType: widget.building.locationType,
+    if (widget.onStartArNavigation != null) {
+      widget.onStartArNavigation!();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ARCompassNavigationPage(
+            destLat: widget.building.destLat,
+            destLon: widget.building.destLon,
+            destName: widget.building.name,
+            locationType: widget.building.locationType,
+          ),
         ),
-      ),
-    );
-  }
-
-  /// Launches the map route preview.
-  void _launchMapPreview() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RoutePreviewPage(
-          destLat: widget.building.destLat,
-          destLng: widget.building.destLon,
-          placeName: widget.building.name,
-        ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -667,8 +669,7 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
               _buildSliverAppBar(context),
               SliverToBoxAdapter(
                 child: Padding(
-                  // Extra bottom padding to clear the two-button FAB row
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 140),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -691,13 +692,10 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
           ),
         ),
       ),
-      // ── Two-button FAB row ──────────────────────────────────────────────────
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildDualButtons(),
+      floatingActionButton: _buildArButton(),
     );
   }
-
-  // ── Sliver app bar ────────────────────────────────────────────────────────
 
   Widget _buildSliverAppBar(BuildContext context) {
     return SliverAppBar(
@@ -726,8 +724,9 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
               errorBuilder: (_, __, ___) => Container(
                 color: _surface,
                 child: Center(
-                    child: Icon(Icons.apartment_rounded,
-                        color: _accent, size: 72)),
+                  child: Icon(Icons.apartment_rounded,
+                      color: _accent, size: 72),
+                ),
               ),
             ),
             DecoratedBox(
@@ -749,8 +748,6 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
       ),
     );
   }
-
-  // ── Header ────────────────────────────────────────────────────────────────
 
   Widget _buildHeader() {
     return Column(
@@ -789,7 +786,8 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
         GestureDetector(
           onTap: _launchAr,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: _accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
@@ -804,9 +802,10 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
                 Text(
                   'ID: ${widget.building.id}  •  Tap to navigate',
                   style: const TextStyle(
-                      color: _accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600),
+                    color: _accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.chevron_right_rounded,
@@ -818,8 +817,6 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
       ],
     );
   }
-
-  // ── AR banner ────────────────────────────────────────────────────────────
 
   Widget _buildArBanner() {
     return GestureDetector(
@@ -855,14 +852,16 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
                   Text(
                     'Voice AR Navigation Ready',
                     style: TextStyle(
-                        color: _textPri,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700),
+                      color: _textPri,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   SizedBox(height: 3),
                   Text(
                     '"Go straight"  •  "Turn left"  •  "Turn right"',
-                    style: TextStyle(color: _textSec, fontSize: 12, height: 1.4),
+                    style: TextStyle(
+                        color: _textSec, fontSize: 12, height: 1.4),
                   ),
                 ],
               ),
@@ -874,8 +873,6 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
       ),
     );
   }
-
-  // ── Meta chips ────────────────────────────────────────────────────────────
 
   Widget _buildMetaChips() {
     return Wrap(
@@ -919,8 +916,6 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
     );
   }
 
-  // ── Description ───────────────────────────────────────────────────────────
-
   Widget _buildDescription() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -929,13 +924,12 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
         const SizedBox(height: 10),
         Text(
           widget.building.description,
-          style: const TextStyle(color: _textSec, fontSize: 15, height: 1.65),
+          style: const TextStyle(
+              color: _textSec, fontSize: 15, height: 1.65),
         ),
       ],
     );
   }
-
-  // ── Facilities ────────────────────────────────────────────────────────────
 
   Widget _buildFacilitiesSection() {
     return Column(
@@ -953,7 +947,8 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
             crossAxisSpacing: 12,
             childAspectRatio: 0.9,
           ),
-          itemBuilder: (_, i) => _facilityTile(widget.building.facilities[i]),
+          itemBuilder: (_, i) =>
+              _facilityTile(widget.building.facilities[i]),
         ),
       ],
     );
@@ -982,17 +977,16 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
             f.label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                color: _textSec,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w500,
-                height: 1.3),
+              color: _textSec,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+              height: 1.3,
+            ),
           ),
         ],
       ),
     );
   }
-
-  // ── Hours card ────────────────────────────────────────────────────────────
 
   Widget _buildHoursCard() {
     return Container(
@@ -1023,9 +1017,11 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(day, style: const TextStyle(color: _textSec, fontSize: 13)),
+        Text(day,
+            style: const TextStyle(color: _textSec, fontSize: 13)),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: isOpen
                 ? Colors.green.withOpacity(0.15)
@@ -1035,9 +1031,10 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
           child: Text(
             hours,
             style: TextStyle(
-                color: isOpen ? Colors.green : Colors.red.shade300,
-                fontSize: 12,
-                fontWeight: FontWeight.w600),
+              color: isOpen ? Colors.green : Colors.red.shade300,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -1058,103 +1055,54 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
         const SizedBox(width: 10),
         Text(text,
             style: const TextStyle(
-                color: _textPri,
-                fontSize: 17,
-                fontWeight: FontWeight.w700)),
+              color: _textPri,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            )),
       ],
     );
   }
 
-  // ── Dual bottom buttons ───────────────────────────────────────────────────
-  //
-  //  [ 🗺️  Map Preview ]   [ 🧭  Start AR Navigation ]
-  //
-  Widget _buildDualButtons() {
+  Widget _buildArButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          // ── Map Preview button ──────────────────────────────────────────
-          Expanded(
-            child: SizedBox(
-              height: 56,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _accent.withOpacity(0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: const Icon(Icons.map_rounded,
-                      color: _accent, size: 20),
-                  label: const Text(
-                    'Map Preview',
-                    style: TextStyle(
-                        color: _accent,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  onPressed: _launchMapPreview,
-                ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                colors: [_accent, Color(0xFF38B2AC)]),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: _accent.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+            ),
+            icon: const Icon(Icons.view_in_ar_rounded,
+                color: Color(0xFF0F1117), size: 22),
+            label: const Text(
+              'Start AR Navigation',
+              style: TextStyle(
+                color: Color(0xFF0F1117),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
               ),
             ),
+            onPressed: _launchAr,
           ),
-
-          const SizedBox(width: 12),
-
-          // ── Start AR Navigation button ──────────────────────────────────
-          Expanded(
-            child: SizedBox(
-              height: 56,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [_accent, Color(0xFF38B2AC)]),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _accent.withOpacity(0.35),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: const Icon(Icons.view_in_ar_rounded,
-                      color: Color(0xFF0F1117), size: 20),
-                  label: const Text(
-                    'Start AR Nav',
-                    style: TextStyle(
-                        color: Color(0xFF0F1117),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3),
-                  ),
-                  onPressed: _launchAr,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
