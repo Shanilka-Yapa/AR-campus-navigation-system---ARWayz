@@ -21,7 +21,7 @@ class _SplashPageState extends State<SplashPage>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
