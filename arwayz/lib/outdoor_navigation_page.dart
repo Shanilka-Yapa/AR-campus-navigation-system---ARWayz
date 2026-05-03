@@ -134,7 +134,10 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Navigate to University'),
+        title: const Text(
+          'Navigate to University',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFF1A2D33),
         elevation: 0,
       ),

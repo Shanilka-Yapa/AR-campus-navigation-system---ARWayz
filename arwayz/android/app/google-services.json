@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1040276065383",
+    "project_id": "arwayz-c30b3",
+    "storage_bucket": "arwayz-c30b3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1040276065383:android:aed5c084cd9a098172d8c2",
+        "android_client_info": {
+          "package_name": "com.example.arwayz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL9WXVfKWNKe8uJb3MLbpo1p80gKvE-Js"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

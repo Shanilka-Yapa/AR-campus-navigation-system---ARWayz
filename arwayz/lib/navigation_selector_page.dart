@@ -1,85 +1,129 @@
 import 'package:flutter/material.dart';
-import 'ar_compass_navigation_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'route_preview_page.dart';
 import 'outdoor_navigation_page.dart';
-
-/// Navigation method selector - Choose between AR Compass or Google Maps
 
 class NavigationSelectorPage extends StatelessWidget {
   const NavigationSelectorPage({super.key});
 
-  // All campus locations with real coordinates
-  static const List<(String, double, double, String)> campusPlaces = [
-    ('Administration Building', 6.079416859527051, 80.19201064963008, 'admin'),
-    ('CEE', 6.078164889030307, 80.1914069593956, 'building'),
-    ('MME', 6.07859285299213, 80.19170316455609, 'building'),
-    ('EIE', 6.078235704870035, 80.19216766168712, 'building'),
-    ('Main Cafeteria', 6.078713286039461, 80.19253361063727, 'cafeteria'),
-    ('Faculty Library', 6.079367213340776, 80.19153075282063, 'library'),
-    ('Faculty Auditorium', 6.0791364229092055, 80.19126639090263, 'auditorium'),
-    ('Faculty Playground', 6.081236252406866, 80.19091511916912, 'playground'),
-    ('FoE Quarters', 6.080658084327748, 80.19018714697019, 'hostel'),
-    ('Hostel B', 6.078065483420608, 80.19276081564473, 'hostel'),
-    ('Hostel A', 6.077860310832621, 80.19304316527848, 'hostel'),
-    ('Boys Hostel D', 6.081582404604873, 80.18952163605634, 'hostel'),
-    ('Gymnasium', 6.0808828638193315, 80.19118258134027, 'gym'),
-    ('Bo Maluwa', 6.079505589725185, 80.19106937366881, 'building'),
-    ('Hela Bojun Cafeteria', 6.078723433792474, 80.19283111418744, 'cafeteria'),
-  ];
+  // Color Palette Definitions
+  static const Color primaryDark = Color(0xFF1A2D33);
+  static const Color deepTeal = Color(0xFF235559);
+  static const Color mutedTeal = Color(0xFF3F727A);
+  static const Color steelBlue = Color(0xFF7B929C);
+  static const Color lightGray = Color(0xFFBEC4C4);
+  static const Color scaffoldBg = Color(0xFFF8F9F9);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        title: const Text('Choose Navigation Method'),
-        elevation: 0,
+        title: const Text(
+          'Choose Navigation Method',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: primaryDark,
+        elevation: 4,
+        shadowColor: primaryDark.withOpacity(0.5),
+        centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const SizedBox(height: 16),
-          _buildMethodCard(
-            context,
-            title: '🧭 AR Compass Arrow',
-            subtitle: 'Realtime pointing arrow in camera',
-            description:
-                'Green arrow + turn-by-turn directions + 3D AR marker at destination.',
-            color: Colors.green,
-            destinations: campusPlaces,
-            onSelect: (destName, lat, lon, type) {
-              Navigator.push(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('buildings').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: deepTeal),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          final List<(String, double, double, String)> liveCampusPlaces =
+              snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return (
+              (data['name'] ?? 'Unknown') as String,
+              (data['latitude'] ?? 6.0794) as double,
+              (data['longitude'] ?? 80.192) as double,
+              (data['type'] ?? 'building') as String,
+            );
+          }).toList();
+
+          return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            children: [
+              _buildSectionHeader('Available Methods'),
+              const SizedBox(height: 16),
+              // --- AR NAVIGATION CARD ---
+              _buildMethodCard(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ARCompassNavigationPage(
-                    destLat: lat,
-                    destLon: lon,
-                    destName: destName,
-                    locationType: type,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildMethodCard(
-            context,
-            title: '🗺️ Google Maps',
-            subtitle: 'Traditional map-based navigation',
-            description:
-                'Full map view with markers, directions, and turn-by-turn guidance.',
-            color: Colors.blue,
-            destinations: const [],
-            onSelect: (destName, lat, lon, type) {
-              Navigator.push(
+                title: 'AR Compass Arrow',
+                icon: Icons.explore_rounded,
+                subtitle: 'Realtime camera-based guidance',
+                description:
+                    'Green arrow + turn-by-turn directions + 3D AR marker at destination.',
+                accentColor: mutedTeal,
+                destinations: liveCampusPlaces,
+                onSelect: (destName, lat, lon, type) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RoutePreviewPage(
+                        destLat: lat,
+                        destLng: lon,
+                        placeName: destName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              // --- GOOGLE MAPS CARD ---
+              _buildMethodCard(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const OutdoorNavigationPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildInfoCard(),
-        ],
+                title: 'Google Maps',
+                icon: Icons.map_rounded,
+                subtitle: 'Traditional map-based navigation',
+                description:
+                    'Full map view with markers, directions, and turn-by-turn guidance.',
+                accentColor: steelBlue,
+                destinations: liveCampusPlaces,
+                onSelect: (destName, lat, lon, type) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OutdoorNavigationPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              _buildInfoCard(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // --- UI HELPER COMPONENTS ---
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title.toUpperCase(),
+      style: const TextStyle(
+        color: steelBlue,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+        fontSize: 13,
       ),
     );
   }
@@ -87,149 +131,170 @@ class NavigationSelectorPage extends StatelessWidget {
   Widget _buildMethodCard(
     BuildContext context, {
     required String title,
+    required IconData icon,
     required String subtitle,
     required String description,
-    required Color color,
+    required Color accentColor,
     required List<(String, double, double, String)> destinations,
     required Function(String, double, double, String) onSelect,
   }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: destinations.isEmpty
-            ? () => onSelect('University', 6.0789, 80.1922, 'building')
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: const TextStyle(fontSize: 13, height: 1.5),
-              ),
-              if (destinations.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Quick navigate to:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: destinations.map((dest) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onSelect(dest.$1, dest.$2, dest.$3, dest.$4);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color.withOpacity(0.8),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: Text(
-                        dest.$1,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ] else ...[
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onSelect('University', 6.0789, 80.1922, 'building');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Open Maps'),
-                ),
-              ],
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryDark.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: accentColor.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Icon(icon, color: accentColor, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryDark,
+                          ),
+                        ),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(fontSize: 13, color: steelBlue),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(color: lightGray, height: 1),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'SELECT DESTINATION',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: steelBlue,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (destinations.isEmpty)
+                    const Text("No buildings found in database.",
+                        style: TextStyle(fontSize: 12, color: Colors.redAccent))
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: destinations.map((dest) {
+                        return ElevatedButton(
+                          onPressed: () => onSelect(dest.$1, dest.$2, dest.$3, dest.$4),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: deepTeal,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            dest.$1,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildInfoCard() {
-    return Card(
-      color: Colors.blue.shade50,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.blue.shade200),
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryDark,
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.blue),
-                SizedBox(width: 8),
-                Text(
-                  'Navigation Tips',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.tips_and_updates_outlined, color: lightGray),
+              SizedBox(width: 8),
+              Text(
+                'Navigation Tips',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              '🧭 AR Compass Arrow:\n'
-              '• Works with or without GPS\n'
-              '• Keep device level\n'
-              '• Arrow points to destination\n'
-              '• Shows real-time distance',
-              style: TextStyle(fontSize: 12, height: 1.6),
-            ),
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 12),
-            const Text(
-              '🗺️ Google Maps:\n'
-              '• Full map interface\n'
-              '• Requires internet\n'
-              '• Shows multiple routes\n'
-              '• Complete turn-by-turn',
-              style: TextStyle(fontSize: 12, height: 1.6),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(Icons.check_circle_outline, 
+              'AR Compass: Keep device level and works without GPS.'),
+          const SizedBox(height: 12),
+          _buildInfoRow(Icons.check_circle_outline, 
+              'Google Maps: Full turn-by-turn. Requires active internet.'),
+        ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: steelBlue),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13, color: lightGray, height: 1.4),
+          ),
+        ),
+      ],
     );
   }
 }
