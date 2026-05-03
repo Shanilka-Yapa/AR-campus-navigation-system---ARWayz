@@ -850,7 +850,7 @@ class _BuildingDetailsPageState extends State<BuildingDetailsPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    'Voice AR Navigation Ready',
+                    ' AR Navigation Ready',
                     style: TextStyle(
                       color: _textPri,
                       fontSize: 14,
