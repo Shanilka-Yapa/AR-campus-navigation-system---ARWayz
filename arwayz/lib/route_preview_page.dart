@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,22 +23,30 @@ class RoutePreviewPage extends StatefulWidget {
 }
 
 class _RoutePreviewPageState extends State<RoutePreviewPage> {
+  // --- COLOR PALETTE ---
+  static const Color primaryDark = Color(0xFF1A2D33);
+  static const Color deepTeal = Color(0xFF235559);
+  static const Color mutedTeal = Color(0xFF3F727A);
+  static const Color steelBlue = Color(0xFF7B929C);
+  static const Color lightGray = Color(0xFFBEC4C4);
+
   LatLng? currentLocation;
   List<LatLng> polylineCoordinates = [];
   String distance = "";
   String duration = "";
   GoogleMapController? mapController;
+  StreamSubscription<Position>? _positionStream;
 
-  // --- PREMIUM SILVER MAP STYLE ---
+  // Custom Map Style tuned to the Palette
   final String _customMapStyle = '''
 [
-  {"elementType": "geometry", "stylers": [{"color": "#f5f5f5"}]},
+  {"elementType": "geometry", "stylers": [{"color": "#f1f3f4"}]},
   {"elementType": "labels.icon", "stylers": [{"visibility": "off"}]},
-  {"elementType": "labels.text.fill", "stylers": [{"color": "#616161"}]},
-  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#eeeeee"}]},
+  {"elementType": "labels.text.fill", "stylers": [{"color": "#7b929c"}]},
+  {"featureType": "poi", "elementType": "geometry", "stylers": [{"color": "#bec4c4"}]},
   {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#ffffff"}]},
-  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#dadada"}]},
-  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#c9c9c9"}]}
+  {"featureType": "road.highway", "elementType": "geometry", "stylers": [{"color": "#bec4c4"}]},
+  {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#3f727a"}]}
 ]
 ''';
 
@@ -47,9 +56,16 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
     _init();
   }
 
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
+  }
+
   Future<void> _init() async {
     await getCurrentLocation();
     await getRoute();
+    _startLiveTracking();
   }
 
   Future<void> getCurrentLocation() async {
@@ -61,7 +77,22 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
     });
   }
 
-  // --- MANUAL DECODER ---
+  void _startLiveTracking() {
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, 
+      ),
+    ).listen((Position position) {
+      if (mounted) {
+        setState(() {
+          currentLocation = LatLng(position.latitude, position.longitude);
+        });
+        getRoute(); 
+      }
+    });
+  }
+
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> points = [];
     int index = 0, len = encoded.length;
@@ -91,9 +122,7 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
 
   Future<void> getRoute() async {
     if (currentLocation == null) return;
-
-    // IMPORTANT: Make sure this key is valid and Directions API is enabled in Google Cloud Console
-    const String googleApiKey = "YOUR_GOOGLE_MAPS_API_KEY"; 
+    const String googleApiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // Ensure this is valid
 
     final url = "https://maps.googleapis.com/maps/api/directions/json?"
         "origin=${currentLocation!.latitude},${currentLocation!.longitude}"
@@ -104,7 +133,6 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
     try {
       final response = await http.get(Uri.parse(url));
       final data = json.decode(response.body);
-
       if (data["status"] == "OK") {
         final route = data["routes"][0];
         final leg = route["legs"][0];
@@ -115,28 +143,30 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
           String encodedPoints = route["overview_polyline"]["points"];
           polylineCoordinates = _decodePolyline(encodedPoints);
         });
-
         _fitMap();
-      } else {
-        print("API Error: ${data["status"]} - ${data["error_message"]}");
       }
     } catch (e) {
-      print("Network Error: $e");
+      debugPrint("NETWORK ERROR: $e");
     }
   }
 
   void _fitMap() {
-    if (mapController == null || polylineCoordinates.isEmpty) return;
+    if (mapController == null || (polylineCoordinates.isEmpty && currentLocation == null)) return;
     
-    double minLat = polylineCoordinates.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
-    double maxLat = polylineCoordinates.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
-    double minLng = polylineCoordinates.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
-    double maxLng = polylineCoordinates.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
+    // Calculate bounds based on current route or the two points
+    List<LatLng> pointsToFit = polylineCoordinates.isNotEmpty 
+        ? polylineCoordinates 
+        : [currentLocation!, LatLng(widget.destLat, widget.destLng)];
+
+    double minLat = pointsToFit.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
+    double maxLat = pointsToFit.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
+    double minLng = pointsToFit.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
+    double maxLng = pointsToFit.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
 
     mapController!.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng)),
-        80, // Padding
+        100, 
       ),
     );
   }
@@ -146,19 +176,23 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(widget.placeName, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white.withOpacity(0.8),
-        elevation: 0,
+        title: Text(
+          widget.placeName, 
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+        ),
+        backgroundColor: primaryDark.withOpacity(0.9),
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 4,
         centerTitle: true,
       ),
       body: currentLocation == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: deepTeal))
           : Stack(
               children: [
                 GoogleMap(
                   onMapCreated: (controller) {
                     mapController = controller;
-                    mapController!.setMapStyle(_customMapStyle); // This hides standard map clutter
+                    mapController!.setMapStyle(_customMapStyle);
                     _fitMap();
                   },
                   initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
@@ -166,50 +200,45 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   markers: {
-                    // Custom Marker for Destination
                     Marker(
                       markerId: const MarkerId("destination"),
                       position: LatLng(widget.destLat, widget.destLng),
-                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(195), // Tealish hue for marker
                       infoWindow: InfoWindow(title: widget.placeName),
                     ),
                   },
                   polylines: {
-                    // 1. OUTER GLOW (Wide and transparent)
                     Polyline(
-                      polylineId: const PolylineId("glow"),
-                      points: polylineCoordinates,
-                      color: Colors.blue.withOpacity(0.2),
-                      width: 15,
-                    ),
-                    // 2. BORDER (Medium width)
-                    Polyline(
-                      polylineId: const PolylineId("border"),
-                      points: polylineCoordinates,
-                      color: Colors.blueAccent,
-                      width: 8,
-                    ),
-                    // 3. CORE LINE (Thin white/light blue center for the "Modern Path" look)
-                    Polyline(
-                      polylineId: const PolylineId("core"),
-                      points: polylineCoordinates,
-                      color: Colors.white,
-                      width: 3,
+                      polylineId: const PolylineId("route_line"),
+                      // Use API points if available, otherwise draw straight line (like your image)
+                      points: polylineCoordinates.isNotEmpty 
+                          ? polylineCoordinates 
+                          : [currentLocation!, LatLng(widget.destLat, widget.destLng)],
+                      color: deepTeal, // Deep Teal from palette
+                      width: 6,
+                      jointType: JointType.round,
+                      startCap: Cap.roundCap,
+                      endCap: Cap.roundCap,
                     ),
                   },
                 ),
 
-                // Floating Information Card
                 Positioned(
-                  bottom: 40,
-                  left: 20,
-                  right: 20,
+                  bottom: 30,
+                  left: 16,
+                  right: 16,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryDark.withOpacity(0.15), 
+                          blurRadius: 30, 
+                          offset: const Offset(0, 10)
+                        )
+                      ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -218,23 +247,45 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             _buildInfo("DISTANCE", distance, Icons.directions_walk),
-                            _buildInfo("TIME", duration, Icons.timer_outlined),
+                            Container(width: 1, height: 40, color: lightGray),
+                            _buildInfo("TIME", duration, Icons.access_time_filled),
                           ],
                         ),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 24),
                         SizedBox(
                           width: double.infinity,
-                          height: 55,
+                          height: 56,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => ARCompassNavigationPage(destLat: widget.destLat, destLon: widget.destLng, destName: widget.placeName, locationType: "default")));
+                              Navigator.push(
+                                context, 
+                                MaterialPageRoute(
+                                  builder: (_) => ARCompassNavigationPage(
+                                    destLat: widget.destLat, 
+                                    destLon: widget.destLng, 
+                                    destName: widget.placeName, 
+                                    locationType: "default"
+                                  )
+                                )
+                              );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                              elevation: 0,
+                              backgroundColor: deepTeal,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 2,
                             ),
-                            child: const Text("START AR NAVIGATION", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.view_in_ar, size: 20),
+                                SizedBox(width: 12),
+                                Text(
+                                  "START AR NAVIGATION", 
+                                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.8)
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       ],
@@ -249,10 +300,17 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
   Widget _buildInfo(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blueAccent, size: 22),
-        const SizedBox(height: 5),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-        Text(value.isEmpty ? "--" : value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Icon(icon, color: mutedTeal, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          label, 
+          style: const TextStyle(fontSize: 10, color: steelBlue, fontWeight: FontWeight.w800, letterSpacing: 0.5)
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value.isEmpty ? "Calculating..." : value, 
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryDark)
+        ),
       ],
     );
   }
