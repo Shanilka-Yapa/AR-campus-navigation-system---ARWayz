@@ -23,7 +23,7 @@ class RoutePreviewPage extends StatefulWidget {
 }
 
 class _RoutePreviewPageState extends State<RoutePreviewPage> {
-  // --- COLOR PALETTE ---
+  // --- OUR COLOR PALETTE ---
   static const Color primaryDark = Color(0xFF1A2D33);
   static const Color deepTeal = Color(0xFF235559);
   static const Color mutedTeal = Color(0xFF3F727A);
