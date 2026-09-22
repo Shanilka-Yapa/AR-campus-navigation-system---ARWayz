@@ -9,6 +9,8 @@ import 'navigation_selector_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'admin_login_page.dart';
+import 'indoor_navigation_page.dart';
+import 'qr_payload.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,10 +78,26 @@ class _MyHomePageState extends State<MyHomePage> {
       MaterialPageRoute(builder: (context) => const QRScannerPage()),
     );
 
-    if (result != null) {
-      print("Got QR code: $result");
-      // You can handle the scanned code here
+    if (!mounted || result is! QrPayload) {
+      return;
     }
+
+    if (result.buildingId != IndoorNavigationPage.buildingId ||
+        result.floor != IndoorNavigationPage.floor) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Scan an IS Department ground-floor ARWayz QR code.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => IndoorNavigationPage(startPoint: result),
+      ),
+    );
   }
 
   @override
@@ -105,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 // NEW: AR Compass Navigation (Practical AR Solution)
                 FloatingActionButton(
+                  heroTag: 'ar-navigation',
                   backgroundColor: Colors.green.shade700,
                   onPressed: () {
                     Navigator.push(
@@ -122,6 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
+                  heroTag: 'outdoor-navigation',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
@@ -136,6 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
+                  heroTag: 'camera',
                   backgroundColor: const Color(0xFF1A2D33),
                   onPressed: () {
                     Navigator.push(
