@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../qr_scanner_page.dart';
 import '../../ar_camera_page.dart';
@@ -264,6 +265,31 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    ElevatedButton.icon(
+                      onPressed: () => context.push('/events'),
+                      icon: const Icon(Icons.event, color: Colors.white),
+                      label: const Text(
+                        'Campus Events',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A2D33),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _openCamera,

@@ -6,6 +6,7 @@ import '../features/home/home_page.dart';
 import '../navigation_selector_page.dart';
 import '../outdoor_navigation_page.dart';
 import '../admin_login_page.dart';
+import '../features/events/events_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -35,6 +36,11 @@ class AppRouter {
         path: '/admin',
         name: 'admin',
         builder: (context, state) => const AdminLoginPage(),
+      ),
+      GoRoute(
+        path: '/events',
+        name: 'events',
+        builder: (context, state) => const EventsPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
