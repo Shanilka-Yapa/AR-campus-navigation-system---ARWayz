@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
-import 'splash_page.dart';
 import 'ar_camera_page.dart';
 import 'building_areas_page.dart';
 import 'outdoor_navigation_page.dart';
@@ -11,6 +10,7 @@ import 'firebase_options.dart';
 import 'admin_login_page.dart';
 import 'indoor_navigation_page.dart';
 import 'qr_payload.dart';
+import 'app/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'ARWayz',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const SplashPage(),
+      routerConfig: AppRouter.router,
     );
   }
 }
@@ -182,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white..withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(8),
@@ -206,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(8),
