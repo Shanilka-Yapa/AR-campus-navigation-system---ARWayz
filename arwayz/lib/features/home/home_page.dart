@@ -66,12 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => IndoorNavigationPage(startPoint: result),
-      ),
-    );
+    context.push('/indoor', extra: result);
   }
 
   @override

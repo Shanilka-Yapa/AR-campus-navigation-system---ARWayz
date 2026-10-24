@@ -7,6 +7,8 @@ import '../navigation_selector_page.dart';
 import '../outdoor_navigation_page.dart';
 import '../admin_login_page.dart';
 import '../features/events/events_page.dart';
+import '../indoor_navigation_page.dart';
+import '../qr_payload.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -41,6 +43,23 @@ class AppRouter {
         path: '/events',
         name: 'events',
         builder: (context, state) => const EventsPage(),
+      ),
+      GoRoute(
+        path: '/indoor',
+        name: 'indoor',
+        builder: (context, state) {
+          final startPoint = state.extra;
+
+          if (startPoint is! QrPayload) {
+            return const Scaffold(
+              body: Center(
+                child: Text('Scan a valid QR code to start indoor navigation.'),
+              ),
+            );
+          }
+
+          return IndoorNavigationPage(startPoint: startPoint);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
