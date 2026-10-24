@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../splash_page.dart';
-import '../main.dart';
+import '../features/home/home_page.dart';
 import '../navigation_selector_page.dart';
 import '../outdoor_navigation_page.dart';
 import '../admin_login_page.dart';
