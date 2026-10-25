@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'route_preview_page.dart';
-import 'outdoor_navigation_page.dart';
+import '../outdoor_navigation/route_preview_page.dart';
+import '../outdoor_navigation/outdoor_navigation_page.dart';
 
 class NavigationSelectorPage extends StatelessWidget {
   const NavigationSelectorPage({super.key});

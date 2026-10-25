@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../splash_page.dart';
 import '../features/home/home_page.dart';
-import '../navigation_selector_page.dart';
-import '../outdoor_navigation_page.dart';
-import '../admin_login_page.dart';
+import '../features/destinations/navigation_selector_page.dart';
+import '../features/outdoor_navigation/outdoor_navigation_page.dart';
+import '../features/admin/admin_login_page.dart';
 import '../features/events/events_page.dart';
-import '../indoor_navigation_page.dart';
-import '../qr_payload.dart';
+import '../features/indoor_navigation/indoor_navigation_page.dart';
+import '../core/models/qr_payload.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
