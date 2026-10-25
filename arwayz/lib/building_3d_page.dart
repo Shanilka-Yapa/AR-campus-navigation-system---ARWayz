@@ -156,13 +156,6 @@ class _IsBuilding3DPage extends StatelessWidget {
         ],
       ),
       body: const Building3DView(),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFFB7791F),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.qr_code_scanner),
-        label: const Text('QR Wayfinder'),
-        onPressed: () => _openWayfinder(context),
-      ),
     );
   }
 }
