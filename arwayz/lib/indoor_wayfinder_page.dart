@@ -3,12 +3,20 @@ import 'package:flutter/material.dart';
 import 'qr_payload.dart';
 import 'qr_scanner_page.dart';
 
-class _WayfinderPoint {
+class _FloorLocation {
   final String id;
   final String name;
   final int floor;
 
-  const _WayfinderPoint(this.id, this.name, this.floor);
+  const _FloorLocation(this.id, this.name, this.floor);
+}
+
+class _BuildingDestination {
+  final String name;
+  final int floor;
+  final String wing;
+
+  const _BuildingDestination(this.name, this.floor, this.wing);
 }
 
 class IndoorWayfinderPage extends StatefulWidget {
@@ -21,28 +29,39 @@ class IndoorWayfinderPage extends StatefulWidget {
 class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
   static const _buildingId = 'IS_BUILDING';
 
-  static const _points = <_WayfinderPoint>[
-    _WayfinderPoint('ground_entrance', 'Ground-floor entrance', 0),
-    _WayfinderPoint('ground_lobby', 'Ground-floor lobby', 0),
-    _WayfinderPoint('ground_corridor', 'Ground-floor corridor junction', 0),
-    _WayfinderPoint('new_computer_center', 'New Computer Center', 0),
+  static const _floorLocations = <_FloorLocation>[
+    _FloorLocation('floor_0', 'Ground-floor QR location', 0),
+    _FloorLocation('floor_1', 'First-floor QR location', 1),
+    _FloorLocation('floor_2', 'Second-floor QR location', 2),
+    _FloorLocation('floor_3', 'Third-floor QR location', 3),
   ];
 
-  static const _destinations = <String>[
-    'New Computer Center',
-    'IS Laboratory',
-    'Reception and Lobby',
+  static const _destinations = <_BuildingDestination>[
+    _BuildingDestination('Central Reception & Lobby', 0, 'Center'),
+    _BuildingDestination('Meeting Room', 0, 'Left Wing'),
+    _BuildingDestination('Board Room', 0, 'Right Wing'),
+    _BuildingDestination("Dean's Office Suite", 1, 'Center'),
+    _BuildingDestination('EEC (Engineering Education Center)', 1, 'Left Wing'),
+    _BuildingDestination('Classroom A', 1, 'Left Wing'),
+    _BuildingDestination('Finance Office', 1, 'Left Wing'),
+    _BuildingDestination('Assistant Registrar Office', 1, 'Right Wing'),
+    _BuildingDestination("Dean's Office", 1, 'Right Wing'),
+    _BuildingDestination('Staff & Faculty Lounge', 1, 'Right Wing'),
+    _BuildingDestination('IS Seminar Room', 2, 'Left Wing'),
+    _BuildingDestination('Academic Wing & Faculty Suites', 2, 'Right & Center'),
+    _BuildingDestination('Computer Center', 3, 'Left Wing'),
+    _BuildingDestination('NCC (New Computer Center)', 3, 'Right Wing'),
   ];
 
-  String? _destination;
-  _WayfinderPoint? _currentPoint;
+  _BuildingDestination? _destination;
+  _FloorLocation? _currentLocation;
   String? _message;
   bool _isScanning = false;
 
-  _WayfinderPoint? _findPoint(QrPayload payload) {
-    for (final point in _points) {
-      if (point.id == payload.pointId && point.floor == payload.floor) {
-        return point;
+  _FloorLocation? _findLocation(QrPayload payload) {
+    for (final location in _floorLocations) {
+      if (location.id == payload.pointId && location.floor == payload.floor) {
+        return location;
       }
     }
     return null;
@@ -69,59 +88,36 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
       return;
     }
 
-    final point = _findPoint(payload);
-    if (point == null) {
+    final location = _findLocation(payload);
+    if (location == null) {
       setState(
         () => _message =
-            'This wayfinder point is not registered yet. Add it to the building QR setup.',
+            'This is not one of the four IS Building floor QR codes.',
       );
       return;
     }
 
     setState(() {
-      _currentPoint = point;
+      _currentLocation = location;
       _message = null;
     });
   }
 
   String _directionText() {
-    final point = _currentPoint!;
+    final location = _currentLocation!;
     final destination = _destination!;
 
-    if (point.name == destination) {
-      return 'You have arrived at $destination.';
+    if (location.floor == destination.floor) {
+      return 'You are on the destination floor. Follow signs to the '
+          '${destination.wing} to find ${destination.name}.';
     }
-    if (destination == 'New Computer Center') {
-      return point.floor == 0
-          ? 'Follow the corridor toward the New Computer Center.'
-          : 'Go to the stairs and follow signs down to the ground floor.';
-    }
-    if (destination == 'Reception and Lobby') {
-      return point.floor == 0
-          ? 'Follow the entrance signs toward Reception and Lobby.'
-          : 'Go to the stairs and continue down to the ground-floor lobby.';
-    }
-    if (destination == 'IS Laboratory') {
-      return point.floor == 0
-          ? 'Follow the laboratory corridor from this checkpoint.'
-          : 'Go to the stairs and continue to the ground-floor laboratory.';
-    }
-    final targetFloor = destination.startsWith('First')
-        ? 1
-        : destination.startsWith('Second')
-        ? 2
-        : 3;
-    if (point.floor == targetFloor) {
-      return 'Follow the signs to the $destination.';
-    }
-    return point.floor < targetFloor
-        ? 'Go to the stairs and move up to floor $targetFloor.'
-        : 'Go to the stairs and move down to floor $targetFloor.';
+    final movement = location.floor < destination.floor ? 'up' : 'down';
+    return 'Go $movement to floor ${destination.floor}, then follow signs '
+        'to the ${destination.wing} to find ${destination.name}.';
   }
 
   @override
   Widget build(BuildContext context) {
-    final point = _currentPoint;
     return Scaffold(
       appBar: AppBar(
         title: const Text('IS Building QR Wayfinder'),
@@ -145,7 +141,7 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
             style: TextStyle(color: Colors.grey.shade700),
           ),
           const SizedBox(height: 24),
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<_BuildingDestination>(
             initialValue: _destination,
             decoration: const InputDecoration(
               labelText: 'Where do you want to go?',
@@ -153,15 +149,18 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
               prefixIcon: Icon(Icons.flag_outlined),
             ),
             items: _destinations
-                .map((destination) => DropdownMenuItem(
+                .map((destination) => DropdownMenuItem<_BuildingDestination>(
                       value: destination,
-                      child: Text(destination),
+                      child: Text(
+                        '${destination.name} • Floor ${destination.floor}, ${destination.wing}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ))
                 .toList(),
             onChanged: (value) {
               setState(() {
                 _destination = value;
-                _currentPoint = null;
+                _currentLocation = null;
                 _message = null;
               });
             },
@@ -181,7 +180,7 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
             const SizedBox(height: 16),
             _MessageCard(message: _message!),
           ],
-          if (point != null) ...[
+          if (_currentLocation != null) ...[
             const SizedBox(height: 20),
             Card(
               color: const Color(0xFFEAF7F0),
@@ -200,13 +199,15 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      point.name,
+                      _currentLocation!.name,
                       style: const TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('IS Building • ${point.floor == 0 ? 'Ground' : '${point.floor}'} floor'),
+                    Text(
+                      'IS Building • ${_currentLocation!.floor == 0 ? 'Ground' : '${_currentLocation!.floor}'} floor',
+                    ),
                     const Divider(height: 24),
                     const Text(
                       'DIRECTION',
