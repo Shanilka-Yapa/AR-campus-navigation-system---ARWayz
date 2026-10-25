@@ -3,7 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart'; // Clipboard
 import 'package:share_plus/share_plus.dart'; // Share
-import 'qr_payload.dart';
+import '../../core/models/qr_payload.dart';
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});

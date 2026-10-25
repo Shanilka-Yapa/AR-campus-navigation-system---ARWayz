@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'ar_compass_navigation_page.dart';
+import '../ar_navigation/ar_compass_navigation_page.dart';
 
 class RoutePreviewPage extends StatefulWidget {
   final double destLat;

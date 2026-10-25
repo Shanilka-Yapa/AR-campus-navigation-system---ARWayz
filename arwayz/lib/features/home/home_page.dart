@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../qr_scanner_page.dart';
-import '../../ar_camera_page.dart';
-import '../../building_areas_page.dart';
-import '../../outdoor_navigation_page.dart';
-import '../../navigation_selector_page.dart';
-import '../../admin_login_page.dart';
-import '../../indoor_navigation_page.dart';
-import '../../qr_payload.dart';
-import '../../building_3d_page.dart';
+import '../qr_scanner/qr_scanner_page.dart';
+import '../ar_navigation/ar_camera_page.dart';
+import '../outdoor_navigation/outdoor_navigation_page.dart';
+import '../destinations/navigation_selector_page.dart';
+import '../admin/admin_login_page.dart';
+import '../indoor_navigation/indoor_navigation_page.dart';
+import '../../core/models/qr_payload.dart';
+import '../indoor_navigation/building_3d_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -22,31 +21,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final TextEditingController _buildingIdController = TextEditingController();
-
-  void _onSubmit() {
-    final buildingId = _buildingIdController.text.trim();
-
-    if (buildingId.toUpperCase() == 'B001') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BuildingAreasPage(buildingId: buildingId),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid Building ID')));
-    }
-  }
-
-  @override
-  void dispose() {
-    _buildingIdController.dispose();
-    super.dispose();
-  }
-
   Future<void> _openCamera() async {
     final result = await Navigator.push(
       context,
@@ -167,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white..withValues(alpha: 0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(8),
@@ -219,63 +193,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     const SizedBox(height: 20),
-                    TextField(
-                      textAlign: TextAlign.center,
-                      controller: _buildingIdController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // round corners
-                          borderSide: BorderSide.none, // remove default border
-                        ),
-                        prefixIcon: Icon(
-                          Icons.location_city,
-                          color: Color(0xFF1A2D33),
-                        ),
-                        hintText: 'Enter Building ID', // only hint
-                        hintStyle: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      keyboardType: TextInputType.text,
-                      textCapitalization: TextCapitalization.characters,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _onSubmit,
-                      icon: Icon(
-                        Icons.send, // Example icon
-                        color: Colors.white, // Icon color
-                      ),
-                      label: Text(
-                        'Submit',
-                        style: TextStyle(
-                          color: Colors.white, // Text color
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(
-                          0xFF1A2D33,
-                        ), // Button background color
-                        foregroundColor: Colors
-                            .white, // Default color for text & icon (optional, already set above)
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // Rounded corners
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 16),
 
                     ElevatedButton.icon(
