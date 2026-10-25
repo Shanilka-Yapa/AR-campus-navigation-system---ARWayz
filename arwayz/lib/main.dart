@@ -4,8 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
 import 'admin_login_page.dart';
+import 'ar_camera_page.dart';
+import 'building_areas_page.dart';
 import 'indoor_navigation_page.dart';
+import 'navigation_selector_page.dart';
+import 'outdoor_navigation_page.dart';
 import 'qr_payload.dart';
+import 'qr_scanner_page.dart';
 import 'building_3d_page.dart';
 import 'app/app_router.dart';
 

@@ -10,6 +10,7 @@ import '../../navigation_selector_page.dart';
 import '../../admin_login_page.dart';
 import '../../indoor_navigation_page.dart';
 import '../../qr_payload.dart';
+import '../../building_3d_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -122,6 +123,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   tooltip: 'Navigate to University',
                   child: const Icon(Icons.navigation, color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'building-3d',
+                  backgroundColor: const Color(0xFFB7791F),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Building3DPage(),
+                      ),
+                    );
+                  },
+                  tooltip: 'Explore 3D Building',
+                  child: const Icon(Icons.business, color: Colors.white),
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton(
