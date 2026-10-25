@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Architectural Building & Floor Plan Explorer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-fontawesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- TWEEN for smooth camera animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-panel-light {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        .room-tooltip {
+            position: absolute;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translate(-50%, -100%);
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden">
+
+    <!-- 3D Viewport Container -->
+    <div id="canvas-container" class="relative"></div>
+
+    <!-- Hover 3D Tooltip -->
+    <div id="tooltip" class="room-tooltip opacity-0 mb-3 px-3 py-1.5 rounded-lg text-xs font-semibold glass-panel text-amber-300 border border-amber-500/30 shadow-xl flex items-center space-x-2">
+        <i class="fa-solid fa-location-dot text-amber-400"></i>
+        <span id="tooltip-text">Room Name</span>
+    </div>
+
+    <!-- Top Floating Header & Quick Navigation Controls -->
+    <header class="absolute top-4 left-4 right-4 md:right-auto z-10 flex flex-wrap gap-3 items-center">
+        <div class="glass-panel px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-900 font-bold shadow-md">
+                <i class="fa-solid fa-building-columns text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm md:text-base text-white tracking-wide">IS Building</h1>
+                <p class="text-xs text-slate-400 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span> 3D VIEW
+                </p>
+            </div>
+        </div>
+
+        <!-- Floor Switcher Tabs -->
+        <div class="glass-panel p-1.5 rounded-xl shadow-2xl flex items-center space-x-1 overflow-x-auto max-w-full">
+            <button onclick="setFloorView('all')" id="btn-floor-all" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 bg-amber-500 text-slate-900 shadow">
+                <i class="fa-solid fa-cubes mr-1"></i> Full
+            </button>
+            <button onclick="setFloorView('exploded')" id="btn-floor-exploded" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                <i class="fa-solid fa-layer-group mr-1"></i> Exploded
+            </button>
+            <div class="h-4 w-px bg-slate-700 mx-1"></div>
+            <button onclick="setFloorView(0)" id="btn-floor-0" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                Ground
+            </button>
+            <button onclick="setFloorView(1)" id="btn-floor-1" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                1st Floor
+            </button>
+            <button onclick="setFloorView(2)" id="btn-floor-2" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                2nd Floor
+            </button>
+            <button onclick="setFloorView(3)" id="btn-floor-3" class="floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200">
+                3rd Floor
+            </button>
+        </div>
+    </header>
+
+    <!-- Camera Control Quick Bar (Top Right) -->
+    <div class="absolute top-4 right-4 z-10 hidden md:flex items-center space-x-2">
+        <button onclick="toggleProjection()" id="btn-projection" title="Toggle 3D Perspective / Top-Down Plan View" class="glass-panel p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition shadow-lg flex items-center space-x-1.5 text-xs font-medium">
+            <i class="fa-solid fa-compass text-amber-400"></i>
+            <span id="proj-text">Plan View</span>
+        </button>
+        <button onclick="resetCamera()" title="Reset Camera View" class="glass-panel p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition shadow-lg">
+            <i class="fa-solid fa-rotate-right"></i>
+        </button>
+    </div>
+
+    <!-- Left Floating Drawer / Search & Room Hierarchy -->
+    <div class="absolute left-4 top-24 bottom-6 w-80 z-10 hidden md:flex flex-col glass-panel rounded-2xl p-4 shadow-2xl border border-slate-700/50">
+        <!-- Search Bar -->
+        <div class="relative mb-3">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="room-search" oninput="filterRooms()" placeholder="Search room, center, office..." 
+                class="w-full pl-9 pr-3 py-2 bg-slate-900/80 border border-slate-700/60 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/80 transition">
+        </div>
+
+        <!-- Floor Directory Tabs -->
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Building Directory</span>
+            <span id="room-count" class="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded-full border border-slate-700">11 Spaces</span>
+        </div>
+
+        <!-- Directory List -->
+        <div id="room-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+            <!-- Dynamically populated via JavaScript -->
+        </div>
+
+        <!-- Quick Help Legend -->
+        <div class="mt-3 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-mouse-pointer text-amber-400"></i> Click room to inspect</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-arrows-spin text-amber-400"></i> Drag to orbit</span>
+        </div>
+    </div>
+
+    <!-- Right Floating Info Panel for Selected Room -->
+    <div id="details-panel" class="absolute right-4 top-24 bottom-20 w-[calc(100vw-2rem)] max-w-80 md:bottom-6 md:w-80 z-10 hidden flex-col glass-panel rounded-2xl p-5 shadow-2xl border border-amber-500/30 transition-all duration-300">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <span id="detail-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Ground Floor • Center
+                </span>
+                <h2 id="detail-title" class="text-xl font-bold text-white mt-1">Reception & Lobby</h2>
+            </div>
+            <button onclick="closeDetails()" aria-label="Close room details" title="Close room details" class="min-w-10 min-h-10 -mr-2 -mt-2 text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-700 p-2 rounded-lg transition flex items-center justify-center gap-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+                <span class="sr-only md:not-sr-only md:text-[10px] md:font-semibold">Close</span>
+            </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                <p class="text-[10px] text-slate-400 uppercase">Capacity</p>
+                <p id="detail-capacity" class="text-sm font-semibold text-slate-200">50 Persons</p>
+            </div>
+            <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                <p class="text-[10px] text-slate-400 uppercase">Wing Position</p>
+                <p id="detail-wing" class="text-sm font-semibold text-slate-200">Central Entrance</p>
+            </div>
+        </div>
+
+        <!-- Room Description -->
+        <div class="mb-4">
+            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Overview</h3>
+            <p id="detail-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-900/40 p-3 rounded-xl border border-slate-800/60">
+                Main building visitor reception, inquiries, double-height atrium lobby with direct access to Flagpole Plaza out front.
+            </p>
+        </div>
+
+        <!-- Features / Key Amenities -->
+        <div class="mb-4 flex-1">
+            <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Key Facilities & Equipment</h3>
+            <ul id="detail-features" class="space-y-1.5 text-xs text-slate-300">
+                <!-- Dynamically populated -->
+            </ul>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-3 border-t border-slate-800 flex space-x-2">
+            <button onclick="focusSelectedRoom()" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-crosshairs"></i> Focus Camera
+            </button>
+            <button onclick="setFloorView(selectedRoom.floor)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition border border-slate-700" title="Isolate Floor">
+                <i class="fa-solid fa-layer-group"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Controls & Mobile Toggle Button -->
+    <div class="absolute bottom-4 left-4 right-4 md:right-auto z-10 flex justify-between md:justify-start gap-2">
+        <button onclick="toggleMobileMenu()" class="md:hidden glass-panel px-4 py-2.5 rounded-xl text-xs font-semibold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-ul text-amber-400"></i> Directory
+        </button>
+        <!-- <div class="glass-panel px-3 py-2 rounded-xl text-[11px] text-slate-400 flex items-center gap-3">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"></span> Selected</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span> Academic</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span> Admin</span>
+        </div> -->
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // --- DATA STRUCTURE FOR THE BUILDING ---
+        const ROOM_DATA = [
+            // GROUND FLOOR (Floor 0)
+            { id: 'reception', name: 'Central Reception & Lobby', floor: 0, wing: 'Center', capacity: '60 People', color: 0x10b981, desc: 'Main entrance hall with reception desk, information display, and access to flag plaza.', features: ['Information Desk', 'Waiting Lounge', 'High Atrium Ceiling', 'Security Desk'] },
+            { id: 'hall-a', name: 'Meeting Room', floor: 0, wing: 'Left Wing', capacity: '180 Seats', color: 0x3b82f6, desc: 'Large lecture hall equipped for conferences, guest lectures, and ceremonies.', features: ['Stage & Podium', 'Tiered Seating', 'Surround Sound', 'HD Projection'] },
+            { id: 'hall-b', name: 'Board Room', floor: 0, wing: 'Right Wing', capacity: '180 Seats', color: 0x3b82f6, desc: 'Multi-purpose auditorium for academic seminars, workshops, and student gatherings.', features: ['Acoustic Wall Panels', 'Dual Projectors', 'Wireless Mics', 'Stage Access'] },
+
+            // FLOOR 1
+            { id: 'dean-office', name: 'Dean\'s Office Suite', floor: 1, wing: 'Center', capacity: '15 Staff/Guests', color: 0x8b5cf6, desc: 'Administrative headquarters for the Dean and executive faculty staff.', features: ['Executive Office', 'Meeting Table', 'Secretary Desk', 'Private Lounge'] },
+            { id: 'eec', name: 'EEC (Engineering Education Center)', floor: 1, wing: 'Left Wing', capacity: '45 Seats', color: 0xec4899, desc: 'Specialized laboratory for circuit testing, hardware prototyping, and power electronics.', features: ['Oscilloscopes', 'PCB Workstations', 'Component Storage', 'Soldering Stations'] },
+            { id: 'class-a', name: 'Classroom A', floor: 1, wing: 'Left Wing', capacity: '40 Seats', color: 0x06b6d4, desc: 'Modern interactive classroom with smart digital whiteboard.', features: ['Smartboard', 'Flexible Seating', 'AC', 'Wi-Fi 6 Access'] },
+            { id: 'class-b', name: 'Finance Office', floor: 1, wing: 'Left Wing', capacity: '40 Seats', color: 0x06b6d4, desc: 'Lecture hall designed for collaborative group work and presentations.', features: ['Modular Desks', 'Short-Throw Projector', 'Glass Whiteboards'] },
+            { id: 'class-c', name: 'Asistance Registar Office', floor: 1, wing: 'Right Wing', capacity: '40 Seats', color: 0x06b6d4, desc: 'Standard academic classroom equipped with audiovisual capabilities.', features: ['Standard Desks', 'Audio Amplifiers', 'Natural Light Facade'] },
+            { id: 'class-d', name: 'Dean\'s Office', floor: 1, wing: 'Right Wing', capacity: '40 Seats', color: 0x06b6d4, desc: 'General purpose classroom for undergraduate lectures and tutorials.', features: ['Ergonomic Seating', 'Blackboard & Smartboard', 'Air Conditioned'] },
+            { id: 'staff-room', name: 'Staff & Faculty Lounge', floor: 1, wing: 'Right Wing', capacity: '25 Faculty', color: 0xf59e0b, desc: 'Rest area and collaborative workspace reserved for professors and lecturers.', features: ['Kitchenette', 'Individual Workstations', 'Relaxation Lounge', 'Faculty Lockers'] },
+
+            // FLOOR 2
+            { id: 'is-seminar', name: 'IS Seminar Room', floor: 2, wing: 'Left Wing', capacity: '80 Seats', color: 0x6366f1, desc: 'Information Systems seminar and defense hall for graduate research.', features: ['Video Conferencing System', 'Interactive Displays', 'Acoustic Ceiling'] },
+            { id: 'academic-wing', name: 'Academic Wing & Faculty Suites', floor: 2, wing: 'Right & Center', capacity: '60 Offices', color: 0x3b82f6, desc: 'Faculty research offices, private consultation rooms, and departmental archives.', features: ['Professor Cabins', 'Consultation Hubs', 'Research Library Corner'] },
+
+            // FLOOR 3
+            { id: 'computer-center', name: 'Computer Center', floor: 3, wing: 'Left Wing', capacity: '120 Workstations', color: 0x14b8a6, desc: 'State-of-the-art computing facility with high-performance desktop terminals and cloud server rack.', features: ['Gigabit Ethernet', 'Dual Monitors', 'Server Room Access', '24/7 Power Backup'] },
+            { id: 'ncc', name: 'NCC (New Computer Center)', floor: 3, wing: 'Right Wing', capacity: '50 Cadets', color: 0x84cc16, desc: 'Headquarters and administrative wing for the institutional NCC unit.', features: ['Commandant Office', 'Equipment Store', 'Briefing Room', 'Trophy & Archive Display'] }
+        ];
+
+        // --- THREE.JS GLOBAL VARIABLES ---
+        let scene, camera, renderer, controls;
+        let buildingGroup, floorGroups = [];
+        let roomMeshes = [];
+        let raycaster, mouse;
+        let selectedRoom = null;
+        let hoverMesh = null;
+        let currentFloorState = 'all'; // 'all', 'exploded', 0, 1, 2, 3
+        let isPlanView = false;
+
+        const FLOOR_HEIGHT = 4.2;
+        const BUILDING_WIDTH = 38;
+        const BUILDING_DEPTH = 18;
+
+        // --- INITIALIZATION ---
+        function init() {
+            const container = document.getElementById('canvas-container');
+
+            // 1. Scene Setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+
+            // 2. Camera Setup
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(42, 32, 52);
+
+            // 3. Renderer Setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            container.appendChild(renderer.domElement);
+
+            // 4. Controls Setup
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.02; // Don't go below ground
+            controls.minDistance = 10;
+            controls.maxDistance = 120;
+            controls.target.set(0, 6, 0);
+
+            // 5. Lighting
+            setupLighting();
+
+            // 6. Build Scene Objects (Environment & Building)
+            createEnvironment();
+            buildBuilding();
+
+            // 7. Raycaster & Mouse setup
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // 8. Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('click', onClick);
+
+            // 9. Populate UI Directory
+            populateDirectory();
+
+            // 10. Start Render Loop
+            animate();
+        }
+
+        // --- LIGHTING SETUP ---
+        function setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
+            sunLight.position.set(45, 60, 35);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 150;
+            const d = 35;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            sunLight.shadow.bias = -0.0005;
+            scene.add(sunLight);
+
+            // Soft blue fill light from opposite angle
+            const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.4);
+            fillLight.position.set(-30, 20, -30);
+            scene.add(fillLight);
+        }
+
+        // --- ENVIRONMENT SETUP (Ground, Driveway, Palms, Flagpoles matching photo) ---
+        function createEnvironment() {
+            const envGroup = new THREE.Group();
+
+            // Ground Grass Plane
+            const groundGeo = new THREE.PlaneGeometry(160, 160);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x22543d, roughness: 0.9, metalness: 0.1 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            envGroup.add(ground);
+
+            // Main Driveway Asphalt Pad
+            const roadGeo = new THREE.PlaneGeometry(80, 50);
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, 0, 22);
+            road.receiveShadow = true;
+            envGroup.add(road);
+
+            // Circular Driveway Island / Flagpole Plaza Base
+            const plazaGeo = new THREE.CylinderGeometry(8, 8.5, 0.4, 32);
+            const stoneMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.6 });
+            const plaza = new THREE.Mesh(plazaGeo, stoneMat);
+            plaza.position.set(0, 0.2, 22);
+            plaza.castShadow = true;
+            plaza.receiveShadow = true;
+            envGroup.add(plaza);
+
+            // Inner Green Lawn on Plaza
+            const innerLawnGeo = new THREE.CylinderGeometry(7.2, 7.2, 0.42, 32);
+            const lawnMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
+            const innerLawn = new THREE.Mesh(innerLawnGeo, lawnMat);
+            innerLawn.position.set(0, 0.22, 22);
+            envGroup.add(innerLawn);
+
+            // 3 Flagpoles in Front (Matching photo)
+            for (let i = -1; i <= 1; i++) {
+                const poleGeo = new THREE.CylinderGeometry(0.08, 0.1, 9, 16);
+                const poleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 });
+                const pole = new THREE.Mesh(poleGeo, poleMat);
+                pole.position.set(i * 1.8, 4.7, 21);
+                pole.castShadow = true;
+                envGroup.add(pole);
+
+                // Small Flag Top
+                const flagGeo = new THREE.BoxGeometry(0.8, 0.5, 0.02);
+                const flagMat = new THREE.MeshStandardMaterial({ color: i === 0 ? 0xd97706 : 0x2563eb });
+                const flag = new THREE.Mesh(flagGeo, flagMat);
+                flag.position.set(i * 1.8 + 0.4, 8.8, 21);
+                envGroup.add(flag);
+            }
+
+            // Palm Trees around Plaza
+            const palmPositions = [
+                [-6, 20], [6, 20], [-9, 24], [9, 24], [-18, 12], [18, 12], [-20, 20], [20, 20]
+            ];
+            palmPositions.forEach(pos => {
+                const palm = createPalmTree();
+                palm.position.set(pos[0], 0, pos[1]);
+                envGroup.add(palm);
+            });
+
+            scene.add(envGroup);
+        }
+
+        // Helper to generate procedural palm trees
+        function createPalmTree() {
+            const palmGroup = new THREE.Group();
+            
+            // Curved Trunk
+            const trunkGeo = new THREE.CylinderGeometry(0.25, 0.4, 6, 8);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 3;
+            trunk.rotation.z = (Math.random() - 0.5) * 0.15;
+            trunk.castShadow = true;
+            palmGroup.add(trunk);
+
+            // Leaves
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, side: THREE.DoubleSide, roughness: 0.6 });
+            for (let i = 0; i < 7; i++) {
+                const leafGeo = new THREE.ConeGeometry(1.2, 3.5, 4);
+                const leaf = new THREE.Mesh(leafGeo, leafMat);
+                leaf.position.set(0, 6, 0);
+                leaf.rotation.x = 1.2;
+                leaf.rotation.y = (i * Math.PI / 3.5);
+                leaf.scale.set(1, 1, 0.1);
+                palmGroup.add(leaf);
+            }
+            return palmGroup;
+        }
+
+        // --- BUILDING CONSTRUCT (Floors, Facade, Rooms) ---
+        function buildBuilding() {
+            buildingGroup = new THREE.Group();
+
+            // Materials
+            const facadeMat = new THREE.MeshStandardMaterial({ color: 0xede8d0, roughness: 0.5 }); // Soft tan cream facade matching photo
+            const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4, roughness: 0.1, transmission: 0.6 });
+            const slabMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.7 });
+
+            // Create 4 Floor Groups
+            for (let f = 0; f < 4; f++) {
+                const floorGroup = new THREE.Group();
+                floorGroup.position.y = f * FLOOR_HEIGHT;
+                floorGroup.userData = { floorIndex: f, basePositionY: f * FLOOR_HEIGHT };
+
+                // Floor Slab Base
+                const slabGeo = new THREE.BoxGeometry(BUILDING_WIDTH, 0.4, BUILDING_DEPTH);
+                const slab = new THREE.Mesh(slabGeo, slabMat);
+                slab.position.y = 0.2;
+                slab.receiveShadow = true;
+                slab.castShadow = true;
+                floorGroup.add(slab);
+
+                // Exterior Columns/Facade Framing for this floor
+                createFloorFacade(floorGroup, f, facadeMat, glassMat);
+
+                // Populate  Rooms for this floor
+                createRoomsForFloor(floorGroup, f);
+
+                floorGroups.push(floorGroup);
+                buildingGroup.add(floorGroup);
+            }
+
+            // Portico Entrance (Ground & 1st Floor extension matching image)
+            const porticoGroup = new THREE.Group();
+            const porticoRoofGeo = new THREE.BoxGeometry(10, 0.5, 6);
+            const porticoRoof = new THREE.Mesh(porticoRoofGeo, facadeMat);
+            porticoRoof.position.set(0, FLOOR_HEIGHT * 1.1, BUILDING_DEPTH / 2 + 3);
+            porticoRoof.castShadow = true;
+            porticoGroup.add(porticoRoof);
+
+            // Portico Pillars
+            for (let x = -4; x <= 4; x += 8) {
+                for (let z = 1; z <= 5; z += 4) {
+                    const colGeo = new THREE.BoxGeometry(0.7, FLOOR_HEIGHT * 1.1, 0.7);
+                    const col = new THREE.Mesh(colGeo, facadeMat);
+                    col.position.set(x, (FLOOR_HEIGHT * 1.1) / 2, BUILDING_DEPTH / 2 + z);
+                    col.castShadow = true;
+                    porticoGroup.add(col);
+                }
+            }
+            buildingGroup.add(porticoGroup);
+
+            // Roof Structure on top of Floor 3
+            const roofHeight = FLOOR_HEIGHT * 4 + 0.2;
+            const roofGeo = new THREE.BoxGeometry(BUILDING_WIDTH + 0.8, 0.6, BUILDING_DEPTH + 0.8);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = roofHeight;
+            roof.castShadow = true;
+            buildingGroup.add(roof);
+
+            scene.add(buildingGroup);
+        }
+
+        // Facade Windows and Frame Elements
+        function createFloorFacade(group, floorIndex, facadeMat, glassMat) {
+            const h = FLOOR_HEIGHT - 0.4;
+            const halfW = BUILDING_WIDTH / 2;
+            const halfD = BUILDING_DEPTH / 2;
+
+            // Front Windows Array
+            for (let x = -halfW + 3; x <= halfW - 3; x += 4.5) {
+                // Skip center on ground for entrance
+                if (floorIndex === 0 && Math.abs(x) < 4) continue;
+
+                const winGeo = new THREE.PlaneGeometry(3.2, h * 0.65);
+                const win = new THREE.Mesh(winGeo, glassMat);
+                win.position.set(x, h / 2 + 0.3, halfD + 0.05);
+                group.add(win);
+
+                // Frame
+                const frameGeo = new THREE.BoxGeometry(3.4, h * 0.7, 0.1);
+                const frame = new THREE.Mesh(frameGeo, facadeMat);
+                frame.position.set(x, h / 2 + 0.3, halfD);
+                group.add(frame);
+            }
+        }
+
+        // --- INTERACTIVE ROOM BLOCKS ---
+        function createRoomsForFloor(floorGroup, floorIndex) {
+            const roomsOnFloor = ROOM_DATA.filter(r => r.floor === floorIndex);
+
+            roomsOnFloor.forEach(room => {
+                let w = 10, d = 14, x = 0, z = 0;
+
+                // Layout Positioning Logic based on Wing & Floor
+                if (room.wing === 'Left Wing') {
+                    w = 14;
+                    x = -BUILDING_WIDTH / 4 - 1;
+                    if (room.id === 'class-a' || room.id === 'is-seminar') z = -3.5;
+                    if (room.id === 'class-b') z = 3.5;
+                } else if (room.wing === 'Right Wing') {
+                    w = 14;
+                    x = BUILDING_WIDTH / 4 + 1;
+                    if (room.id === 'class-c') z = -3.5;
+                    if (room.id === 'class-d' || room.id === 'staff-room') z = 3.5;
+                } else { // Center
+                    w = 11;
+                    x = 0;
+                    z = 0;
+                }
+
+                if (room.id === 'computer-center') { w = 16; x = -9; }
+                if (room.id === 'ncc') { w = 16; x = 9; }
+                if (room.id === 'academic-wing') { w = 22; x = 5; }
+
+                // Create Interactive Glassy Room Block
+                const roomGeo = new THREE.BoxGeometry(w, FLOOR_HEIGHT - 0.8, d);
+                const roomMat = new THREE.MeshStandardMaterial({
+                    color: room.color,
+                    transparent: true,
+                    opacity: 0.55,
+                    roughness: 0.3,
+                    metalness: 0.1
+                });
+
+                const roomMesh = new THREE.Mesh(roomGeo, roomMat);
+                roomMesh.position.set(x, FLOOR_HEIGHT / 2 + 0.1, z);
+                roomMesh.castShadow = true;
+
+                // Wireframe outline for clean architectural look
+                const edges = new THREE.EdgesGeometry(roomGeo);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+                const line = new THREE.LineSegments(edges, lineMat);
+                roomMesh.add(line);
+
+                // Store metadata inside mesh
+                roomMesh.userData = {
+                    ...room,
+                    originalColor: room.color,
+                    defaultOpacity: 0.55
+                };
+
+                roomMeshes.push(roomMesh);
+                floorGroup.add(roomMesh);
+            });
+        }
+
+        // --- POPULATE DIRECTORY LIST IN UI ---
+        function populateDirectory() {
+            const listEl = document.getElementById('room-list');
+            listEl.innerHTML = '';
+
+            // Group by floors
+            const floorNames = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor'];
+
+            for (let f = 3; f >= 0; f--) {
+                const floorRooms = ROOM_DATA.filter(r => r.floor === f);
+                if (floorRooms.length === 0) continue;
+
+                const floorHeader = document.createElement('div');
+                floorHeader.className = 'text-[11px] font-bold text-amber-400 mt-2 mb-1 px-1 flex items-center justify-between border-b border-slate-800 pb-1';
+                floorHeader.innerHTML = `<span><i class="fa-solid fa-layer-group text-[10px] mr-1"></i>${floorNames[f]}</span>`;
+                listEl.appendChild(floorHeader);
+
+                floorRooms.forEach(room => {
+                    const item = document.createElement('div');
+                    item.className = 'room-item p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-amber-500/40 cursor-pointer transition flex items-center justify-between group';
+                    item.dataset.roomId = room.id;
+                    item.onclick = () => selectRoomById(room.id);
+
+                    const colorHex = '#' + room.color.toString(16).padStart(6, '0');
+
+                    item.innerHTML = `
+                        <div class="flex items-center space-x-2.5 overflow-hidden">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${colorHex}"></span>
+                            <span class="text-xs font-medium text-slate-300 group-hover:text-white truncate">${room.name}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600 group-hover:text-amber-400 transition"></i>
+                    `;
+                    listEl.appendChild(item);
+                });
+            }
+        }
+
+        // --- INTERACTION HANDLERS ---
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(roomMeshes);
+
+            const tooltip = document.getElementById('tooltip');
+
+            if (intersects.length > 0) {
+                const mesh = intersects[0].object;
+
+                if (hoverMesh && hoverMesh !== mesh && hoverMesh !== selectedRoom?.mesh) {
+                    hoverMesh.material.opacity = hoverMesh.userData.defaultOpacity;
+                }
+
+                hoverMesh = mesh;
+                if (mesh !== selectedRoom?.mesh) {
+                    mesh.material.opacity = 0.85;
+                }
+
+                // Show Tooltip
+                tooltip.style.left = `${event.clientX}px`;
+                tooltip.style.top = `${event.clientY - 10}px`;
+                tooltip.style.opacity = '1';
+                document.getElementById('tooltip-text').textContent = mesh.userData.name;
+                document.body.style.cursor = 'pointer';
+            } else {
+                if (hoverMesh && hoverMesh !== selectedRoom?.mesh) {
+                    hoverMesh.material.opacity = hoverMesh.userData.defaultOpacity;
+                    hoverMesh = null;
+                }
+                tooltip.style.opacity = '0';
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(roomMeshes);
+
+            if (intersects.length > 0) {
+                const mesh = intersects[0].object;
+                selectRoomByMesh(mesh);
+            }
+        }
+
+        function selectRoomById(id) {
+            const mesh = roomMeshes.find(m => m.userData.id === id);
+            if (mesh) {
+                selectRoomByMesh(mesh);
+            }
+        }
+
+        function selectRoomByMesh(mesh) {
+            // Reset previously selected
+            if (selectedRoom) {
+                selectedRoom.mesh.material.emissive.setHex(0x000000);
+                selectedRoom.mesh.material.opacity = selectedRoom.mesh.userData.defaultOpacity;
+            }
+
+            const data = mesh.userData;
+            selectedRoom = { mesh, ...data };
+
+            // Highlight selected room in 3D
+            mesh.material.emissive.setHex(0x38bdf8);
+            mesh.material.emissiveIntensity = 0.4;
+            mesh.material.opacity = 0.95;
+
+            // Show and update details sidebar panel
+            const panel = document.getElementById('details-panel');
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+
+            document.getElementById('detail-title').textContent = data.name;
+            document.getElementById('detail-badge').textContent = `Floor ${data.floor === 0 ? 'Ground' : data.floor} • ${data.wing}`;
+            document.getElementById('detail-capacity').textContent = data.capacity;
+            document.getElementById('detail-wing').textContent = data.wing;
+            document.getElementById('detail-desc').textContent = data.desc;
+
+            const featuresList = document.getElementById('detail-features');
+            featuresList.innerHTML = '';
+            data.features.forEach(feat => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center space-x-2 text-slate-300';
+                li.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400 text-[10px]"></i><span>${feat}</span>`;
+                featuresList.appendChild(li);
+            });
+
+            // Focus camera gently on selected room
+            focusSelectedRoom();
+        }
+
+        function focusSelectedRoom() {
+            if (!selectedRoom) return;
+
+            const worldPos = new THREE.Vector3();
+            selectedRoom.mesh.getWorldPosition(worldPos);
+
+            new TWEEN.Tween(controls.target)
+                .to({ x: worldPos.x, y: worldPos.y, z: worldPos.z }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+
+            new TWEEN.Tween(camera.position)
+                .to({ x: worldPos.x + 18, y: worldPos.y + 14, z: worldPos.z + 22 }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+        }
+
+        function closeDetails() {
+            if (selectedRoom) {
+                selectedRoom.mesh.material.emissive.setHex(0x000000);
+                selectedRoom.mesh.material.opacity = selectedRoom.mesh.userData.defaultOpacity;
+                selectedRoom = null;
+            }
+            const panel = document.getElementById('details-panel');
+            panel.classList.add('hidden');
+            panel.classList.remove('flex');
+        }
+
+        // --- FLOOR CUTAWAY & EXPLODED VIEWS ---
+        function setFloorView(floor) {
+            currentFloorState = floor;
+
+            // Update UI buttons styling
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.className = 'floor-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all duration-200';
+            });
+
+            const activeBtn = document.getElementById(`btn-floor-${floor}`);
+            if (activeBtn) {
+                activeBtn.className = 'floor-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-900 shadow transition-all duration-200';
+            }
+
+            // Animate Floor Groups
+            floorGroups.forEach((group, index) => {
+                let targetY = group.userData.basePositionY;
+                let targetOpacity = 1;
+
+                if (floor === 'exploded') {
+                    targetY = group.userData.basePositionY * 2.2;
+                    group.visible = true;
+                } else if (floor === 'all') {
+                    targetY = group.userData.basePositionY;
+                    group.visible = true;
+                } else {
+                    // Single floor cutaway isolation
+                    if (index === floor) {
+                        targetY = 0;
+                        group.visible = true;
+                    } else {
+                        group.visible = false;
+                    }
+                }
+
+                new TWEEN.Tween(group.position)
+                    .to({ y: targetY }, 800)
+                    .easing(TWEEN.Easing.Back.Out)
+                    .start();
+            });
+        }
+
+        // --- CAMERA PROJECTION TOGGLE (Plan View vs Isometric View) ---
+        function toggleProjection() {
+            isPlanView = !isPlanView;
+            const projText = document.getElementById('proj-text');
+
+            if (isPlanView) {
+                projText.textContent = '3D View';
+                // Move to Top-Down Orthographic style angle
+                new TWEEN.Tween(camera.position)
+                    .to({ x: 0, y: 70, z: 0.1 }, 1000)
+                    .easing(TWEEN.Easing.Cubic.InOut)
+                    .start();
+                new TWEEN.Tween(controls.target)
+                    .to({ x: 0, y: 0, z: 0 }, 1000)
+                    .easing(TWEEN.Easing.Cubic.InOut)
+                    .start();
+            } else {
+                projText.textContent = 'Plan View';
+                resetCamera();
+            }
+        }
+
+        function resetCamera() {
+            new TWEEN.Tween(camera.position)
+                .to({ x: 42, y: 32, z: 52 }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+            new TWEEN.Tween(controls.target)
+                .to({ x: 0, y: 6, z: 0 }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+        }
+
+        // --- SEARCH FILTER ---
+        function filterRooms() {
+            const query = document.getElementById('room-search').value.toLowerCase();
+            const roomItems = document.querySelectorAll('.room-item');
+
+            roomItems.forEach(item => {
+                const roomId = item.dataset.roomId;
+                const roomData = ROOM_DATA.find(r => r.id === roomId);
+                if (roomData.name.toLowerCase().includes(query) || roomData.wing.toLowerCase().includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.w-80');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('flex');
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- ANIMATION LOOP ---
+        function animate(time) {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            controls.update();
+
+            // Subtle continuous floating rotation when idle
+            if (buildingGroup && !controls.state == -1) {
+                // optional ambient movement
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Start App
+        window.onload = init;
+    </script>
+</body>
+</html>
