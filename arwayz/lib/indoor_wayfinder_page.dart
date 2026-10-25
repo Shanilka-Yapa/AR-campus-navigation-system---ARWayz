@@ -152,7 +152,7 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
                 .map((destination) => DropdownMenuItem<_BuildingDestination>(
                       value: destination,
                       child: Text(
-                        '${destination.name} • Floor ${destination.floor}, ${destination.wing}',
+                        destination.name,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ))
