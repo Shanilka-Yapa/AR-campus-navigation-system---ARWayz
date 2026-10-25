@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'qr_scanner_page.dart';
 import 'package:flutter/services.dart';
-import 'splash_page.dart';
-import 'ar_camera_page.dart';
-import 'building_areas_page.dart';
-import 'outdoor_navigation_page.dart';
-import 'navigation_selector_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'firebase_options.dart';
 import 'admin_login_page.dart';
 import 'indoor_navigation_page.dart';
 import 'qr_payload.dart';
 import 'building_3d_page.dart';
+import 'app/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +20,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'ARWayz',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -33,7 +29,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const SplashPage(),
+      routerConfig: AppRouter.router,
     );
   }
 }
@@ -235,11 +231,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          /* Dark overlay
-          Container(
-            color: Colors.black.withOpacity(0.45),
-          ),*/
-
           // Foreground content
           Center(
             child: SingleChildScrollView(
@@ -257,16 +248,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // round corners
-                          borderSide: BorderSide.none, // remove default border
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
                         ),
-                        prefixIcon: Icon(
+                        prefixIcon: const Icon(
                           Icons.location_city,
                           color: Color(0xFF1A2D33),
                         ),
-                        hintText: 'Enter Building ID', // only hint
+                        hintText: 'Enter Building ID',
                         hintStyle: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
@@ -278,32 +267,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: _onSubmit,
-                      icon: Icon(
-                        Icons.send, // Example icon
-                        color: Colors.white, // Icon color
-                      ),
-                      label: Text(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      label: const Text(
                         'Submit',
                         style: TextStyle(
-                          color: Colors.white, // Text color
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(
-                          0xFF1A2D33,
-                        ), // Button background color
-                        foregroundColor: Colors
-                            .white, // Default color for text & icon (optional, already set above)
+                        backgroundColor: const Color(0xFF1A2D33),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            20,
-                          ), // Rounded corners
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                     ),
@@ -322,16 +303,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize
-                            .min, // Row only takes the space it needs
-                        mainAxisAlignment:
-                            MainAxisAlignment.center, // Centers content
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(
                             Icons.qr_code_scanner,
                             color: Color(0xFF1A2D33),
-                          ), // Icon at start
-                          SizedBox(width: 10), // Space between icon and text
+                          ),
+                          SizedBox(width: 10),
                           Text(
                             'Scan QR Code',
                             style: TextStyle(

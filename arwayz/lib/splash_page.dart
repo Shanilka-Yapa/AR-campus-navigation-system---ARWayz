@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // import to navigate to MyHomePage
+import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -22,12 +22,7 @@ class _SplashPageState extends State<SplashPage>
     )..repeat();
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const MyHomePage(title: 'ARWayz'),
-        ),
-      );
+      context.go('/home');
     });
   }
 
