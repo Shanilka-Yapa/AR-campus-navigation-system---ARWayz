@@ -11,9 +11,9 @@ plugins {
 android {
     namespace = "com.example.arwayz"
 
-    //Override flutter default sdk versions
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
