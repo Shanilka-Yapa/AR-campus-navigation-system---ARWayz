@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart'; // Clipboard
-import 'package:share_plus/share_plus.dart'; // Share
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/models/qr_payload.dart';
 
 class QRScannerPage extends StatefulWidget {
@@ -24,11 +24,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
     super.dispose();
   }
 
-  /// Helper: Clean and prepare QR code for opening
   String _prepareUrl(String code) {
     String urlString = code.trim().replaceAll('\n', '').replaceAll('\r', '');
-
-    // Check if it looks like a URL, if not prepend https://
     if (!urlString.startsWith(RegExp(r'https?://'))) {
       urlString = 'https://$urlString';
     }
@@ -43,7 +40,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        // Show dialog for invalid URL
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
@@ -83,7 +79,28 @@ class _QRScannerPageState extends State<QRScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Code')),
+      appBar: AppBar(
+        title: const Text(
+          'Scan QR Code',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+        ),
+        backgroundColor: const Color(0xFF1A2D33),
+        centerTitle: true,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
+      ),
       body: Column(
         children: [
           // Camera view
@@ -124,7 +141,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                   color: Colors.white,
                   elevation: 6,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -144,22 +161,27 @@ class _QRScannerPageState extends State<QRScannerPage> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: _useScannedPayload,
-                              icon: const Icon(Icons.check),
+                              icon: const Icon(Icons.check_rounded),
                               label: const Text('USE THIS QR CODE'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1A2D33),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           )
                         else
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              // Open in browser
                               ElevatedButton.icon(
                                 onPressed: () => _openUrl(scannedCode),
-                                icon: const Icon(Icons.open_in_browser),
+                                icon: const Icon(Icons.open_in_browser_rounded),
                                 label: const Text('Open'),
                               ),
-
-                              // Copy to clipboard
                               ElevatedButton.icon(
                                 onPressed: () {
                                   Clipboard.setData(
@@ -171,11 +193,9 @@ class _QRScannerPageState extends State<QRScannerPage> {
                                     ),
                                   );
                                 },
-                                icon: const Icon(Icons.copy),
+                                icon: const Icon(Icons.copy_rounded),
                                 label: const Text('Copy'),
                               ),
-
-                              // Share
                               ElevatedButton.icon(
                                 onPressed: () {
                                   Share.share(
@@ -183,7 +203,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                                     subject: 'QR Code Link',
                                   );
                                 },
-                                icon: const Icon(Icons.share),
+                                icon: const Icon(Icons.share_rounded),
                                 label: const Text('Share'),
                               ),
                             ],
@@ -191,7 +211,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                         if (scannedPayload == null)
                           TextButton.icon(
                             onPressed: _scanAgain,
-                            icon: const Icon(Icons.refresh),
+                            icon: const Icon(Icons.refresh_rounded),
                             label: const Text('Scan again'),
                           ),
                       ],

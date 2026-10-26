@@ -12,7 +12,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Colors from your palette
+  // Colors from palette
   final Color colorDark = const Color(0xFF1a2d33);
   final Color colorDeepTeal = const Color(0xFF235559);
   final Color colorMutedTeal = const Color(0xFF3f727a);
@@ -36,7 +36,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         ),
       );
 
-      // clear inputs
       _usernameController.clear();
       _passwordController.clear();
 
@@ -66,7 +65,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Smooth gradient background using your palette
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -89,6 +87,35 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               bottom: -30,
               left: -30,
               child: CircleAvatar(radius: 80, backgroundColor: colorSteelBlue.withOpacity(0.1)),
+            ),
+
+            // Top Modern Back Button
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.maybePop(context),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.25),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             Center(
@@ -182,7 +209,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     ),
                     const SizedBox(height: 30),
                     Text(
-                      "© 2024 ArWayz Secure Systems",
+                      "© 2024 ARWayz Secure Systems",
                       style: TextStyle(color: colorSteelBlue.withOpacity(0.5), fontSize: 12),
                     ),
                   ],

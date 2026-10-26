@@ -23,7 +23,6 @@ class RoutePreviewPage extends StatefulWidget {
 }
 
 class _RoutePreviewPageState extends State<RoutePreviewPage> {
-  // --- COLOR PALETTE ---
   static const Color primaryDark = Color(0xFF1A2D33);
   static const Color deepTeal = Color(0xFF235559);
   static const Color mutedTeal = Color(0xFF3F727A);
@@ -37,7 +36,6 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
   GoogleMapController? mapController;
   StreamSubscription<Position>? _positionStream;
 
-  // Custom Map Style tuned to the Palette
   final String _customMapStyle = '''
 [
   {"elementType": "geometry", "stylers": [{"color": "#f1f3f4"}]},
@@ -122,7 +120,7 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
 
   Future<void> getRoute() async {
     if (currentLocation == null) return;
-    const String googleApiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // Ensure this is valid
+    const String googleApiKey = "YOUR_GOOGLE_MAPS_API_KEY";
 
     final url = "https://maps.googleapis.com/maps/api/directions/json?"
         "origin=${currentLocation!.latitude},${currentLocation!.longitude}"
@@ -153,8 +151,7 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
   void _fitMap() {
     if (mapController == null || (polylineCoordinates.isEmpty && currentLocation == null)) return;
     
-    // Calculate bounds based on current route or the two points
-    List<LatLng> pointsToFit = polylineCoordinates.isNotEmpty 
+    List<LatLng> pointsToFit = polylineCoordinates.isNotEmpty
         ? polylineCoordinates 
         : [currentLocation!, LatLng(widget.destLat, widget.destLng)];
 
@@ -178,12 +175,24 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
       appBar: AppBar(
         title: Text(
           widget.placeName, 
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)
         ),
         backgroundColor: primaryDark.withOpacity(0.9),
-        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 4,
         centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.25)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: currentLocation == null
           ? const Center(child: CircularProgressIndicator(color: deepTeal))
@@ -203,18 +212,17 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
                     Marker(
                       markerId: const MarkerId("destination"),
                       position: LatLng(widget.destLat, widget.destLng),
-                      icon: BitmapDescriptor.defaultMarkerWithHue(195), // Tealish hue for marker
+                      icon: BitmapDescriptor.defaultMarkerWithHue(195),
                       infoWindow: InfoWindow(title: widget.placeName),
                     ),
                   },
                   polylines: {
                     Polyline(
                       polylineId: const PolylineId("route_line"),
-                      // Use API points if available, otherwise draw straight line (like your image)
-                      points: polylineCoordinates.isNotEmpty 
+                      points: polylineCoordinates.isNotEmpty
                           ? polylineCoordinates 
                           : [currentLocation!, LatLng(widget.destLat, widget.destLng)],
-                      color: deepTeal, // Deep Teal from palette
+                      color: deepTeal,
                       width: 6,
                       jointType: JointType.round,
                       startCap: Cap.roundCap,
@@ -246,9 +254,9 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildInfo("DISTANCE", distance, Icons.directions_walk),
+                            _buildInfo("DISTANCE", distance, Icons.directions_walk_rounded),
                             Container(width: 1, height: 40, color: lightGray),
-                            _buildInfo("TIME", duration, Icons.access_time_filled),
+                            _buildInfo("TIME", duration, Icons.access_time_filled_rounded),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -278,7 +286,7 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.view_in_ar, size: 20),
+                                Icon(Icons.view_in_ar_rounded, size: 20),
                                 SizedBox(width: 12),
                                 Text(
                                   "START AR NAVIGATION", 
