@@ -18,18 +18,19 @@ class IndoorCheckpoint {
   });
 }
 
-/// QR-assisted indoor route for the IS Department building prototype.
-///
-/// Replace these four checkpoint labels with the real locations after doing
-/// a walkthrough of the building. The QR payloads are documented in
-/// INDOOR_QR_SETUP.md.
+/// QR-assisted indoor route for building navigation.
 class IndoorNavigationPage extends StatefulWidget {
   static const buildingId = 'IS_BUILDING';
   static const floor = 0;
 
   final QrPayload startPoint;
+  final String? departmentName;
 
-  const IndoorNavigationPage({super.key, required this.startPoint});
+  const IndoorNavigationPage({
+    super.key,
+    required this.startPoint,
+    this.departmentName,
+  });
 
   @override
   State<IndoorNavigationPage> createState() => _IndoorNavigationPageState();
@@ -52,13 +53,13 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
     IndoorCheckpoint(
       id: 'ground_corridor',
       name: 'Ground-floor corridor junction',
-      instruction: 'Turn toward the IS laboratory corridor.',
+      instruction: 'Turn toward the laboratory corridor.',
       icon: Icons.turn_right,
     ),
     IndoorCheckpoint(
       id: 'new_computer_center',
-      name: 'New Computer Center',
-      instruction: 'You have reached the New Computer Center.',
+      name: 'Main Computer Center / Lab Suite',
+      instruction: 'You have reached the main lab facility.',
       icon: Icons.computer,
     ),
   ];
@@ -129,8 +130,8 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
     if (result == null) return;
 
     final expected = _next!;
-    if (result.buildingId != IndoorNavigationPage.buildingId ||
-        result.floor != IndoorNavigationPage.floor) {
+    if (result.buildingId != widget.startPoint.buildingId ||
+        result.floor != widget.startPoint.floor) {
       setState(() => _message = 'Wrong building or floor QR code.');
       return;
     }
@@ -142,7 +143,7 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
     setState(() {
       _currentIndex++;
       _message = _arrived
-          ? 'Arrival confirmed at New Computer Center.'
+          ? 'Arrival confirmed at destination.'
           : 'Checkpoint confirmed: ${expected.name}.';
     });
   }
@@ -150,12 +151,32 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
   @override
   Widget build(BuildContext context) {
     final next = _next;
+    final deptName = widget.departmentName ?? 'IS Department';
+
     return Scaffold(
       backgroundColor: const Color(0xFF111A1D),
       appBar: AppBar(
-        title: const Text('Indoor Navigation'),
+        title: Text('$deptName Indoor Navigation'),
         backgroundColor: const Color(0xFF1A2D33),
         foregroundColor: Colors.white,
+        centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.18),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withOpacity(0.25)),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -164,11 +185,11 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
             CameraPreview(_cameraController!)
           else
             const ColoredBox(color: Color(0xFF243438)),
-          ColoredBox(color: Colors.black26),
+          const ColoredBox(color: Colors.black26),
           SafeArea(
             child: Column(
               children: [
-                _statusCard(),
+                _statusCard(deptName),
                 const Spacer(),
                 if (!_arrived) _directionOverlay(next!),
                 const Spacer(),
@@ -181,7 +202,7 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
     );
   }
 
-  Widget _statusCard() {
+  Widget _statusCard(String deptName) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -191,11 +212,11 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.business, color: Color(0xFF63D6A0)),
+          const Icon(Icons.business_rounded, color: Color(0xFF63D6A0)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'IS Department Building\nGround Floor',
+              '$deptName Building\nGround Floor',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -215,7 +236,7 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
   Widget _directionOverlay(IndoorCheckpoint next) {
     return Column(
       children: [
-        const Icon(Icons.navigation, color: Color(0xFF63D6A0), size: 92),
+        const Icon(Icons.navigation_rounded, color: Color(0xFF63D6A0), size: 92),
         const SizedBox(height: 8),
         Text(
           'NEXT: ${next.name}',
@@ -277,7 +298,7 @@ class _IndoorNavigationPageState extends State<IndoorNavigationPage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _arrived || _isScanning ? null : _scanNextCheckpoint,
-              icon: Icon(_arrived ? Icons.check : Icons.qr_code_scanner),
+              icon: Icon(_arrived ? Icons.check_rounded : Icons.qr_code_scanner_rounded),
               label: Text(
                 _arrived
                     ? 'ARRIVAL CONFIRMED'
