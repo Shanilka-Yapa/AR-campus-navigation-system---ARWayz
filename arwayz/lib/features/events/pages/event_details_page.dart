@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../outdoor_navigation/route_preview_page.dart';
 
-import '../../../route_preview_page.dart';
+
 import '../event_theme.dart';
 import '../models/event.dart';
 import '../services/event_service.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'qr_payload.dart';
-import 'qr_scanner_page.dart';
+import '../../core/models/qr_payload.dart';
+import '../qr_scanner/qr_scanner_page.dart';
 
 class _FloorLocation {
   final String id;

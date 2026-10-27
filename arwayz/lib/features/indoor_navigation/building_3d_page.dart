@@ -10,35 +10,58 @@ class Building3DPage extends StatefulWidget {
 }
 
 class _Building3DPageState extends State<Building3DPage> {
+  static const Color primaryDark = Color(0xFF1A2D33);
+  static const Color goldAccent = Color(0xFFB7791F);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9F9),
       appBar: AppBar(
-        title: const Text('Explore Buildings'),
-        backgroundColor: const Color(0xFF1A2D33),
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Explore Buildings',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+        ),
+        backgroundColor: primaryDark,
+        centerTitle: true,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
             'Choose a department building',
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A2D33),
+              color: primaryDark,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Select a building to open its interactive 3D view.',
-            style: TextStyle(color: Colors.grey.shade700),
+            'Select a building to open its interactive 3D floorplan view.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 13.5),
           ),
           const SizedBox(height: 24),
           _BuildingOption(
             name: 'IS Department',
             subtitle: 'IS Building',
-            icon: Icons.computer,
+            icon: Icons.computer_rounded,
             available: true,
             onTap: () {
               Navigator.push(
@@ -52,17 +75,17 @@ class _Building3DPageState extends State<Building3DPage> {
           _BuildingOption(
             name: 'Electrical Department',
             subtitle: 'Electrical Department Building',
-            icon: Icons.electrical_services,
+            icon: Icons.electrical_services_rounded,
           ),
           _BuildingOption(
             name: 'Mechanical Department',
             subtitle: 'Mechanical Department Building',
-            icon: Icons.precision_manufacturing,
+            icon: Icons.precision_manufacturing_rounded,
           ),
           _BuildingOption(
             name: 'Civil Engineering Department',
             subtitle: 'Civil Engineering Building',
-            icon: Icons.architecture,
+            icon: Icons.architecture_rounded,
           ),
         ],
       ),
@@ -90,6 +113,9 @@ class _BuildingOption extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
@@ -106,13 +132,14 @@ class _BuildingOption extends StatelessWidget {
         ),
         title: Text(
           name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
         subtitle: Text(
           available ? subtitle : '$subtitle • 3D view coming soon',
+          style: const TextStyle(fontSize: 12.5),
         ),
         trailing: Icon(
-          available ? Icons.arrow_forward_ios : Icons.lock_outline,
+          available ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded,
           size: 18,
           color: available ? const Color(0xFFB7791F) : Colors.grey,
         ),
@@ -144,14 +171,30 @@ class _IsBuilding3DPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('IS Building 3D View'),
+        title: const Text(
+          'IS Building 3D View',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+        ),
         backgroundColor: const Color(0xFF1A2D33),
-        foregroundColor: Colors.white,
+        centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () => _openWayfinder(context),
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Open ',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            tooltip: 'Scan indoor QR',
           ),
         ],
       ),

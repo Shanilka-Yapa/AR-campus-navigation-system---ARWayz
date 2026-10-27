@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../splash_page.dart';
-import '../features/home/home_page.dart';
-import '../navigation_selector_page.dart';
-import '../outdoor_navigation_page.dart';
-import '../admin_login_page.dart';
+import '../features/welcome/welcome_page.dart';
+import '../features/dashboard/dashboard_page.dart';
+import '../features/destinations/navigation_selector_page.dart';
+import '../features/outdoor_navigation/outdoor_navigation_page.dart';
+import '../features/admin/admin_login_page.dart';
 import '../features/events/events_page.dart';
-import '../indoor_navigation_page.dart';
-import '../qr_payload.dart';
+import '../features/indoor_navigation/indoor_navigation_page.dart';
+import '../core/models/qr_payload.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -20,9 +21,19 @@ class AppRouter {
         builder: (context, state) => const SplashPage(),
       ),
       GoRoute(
+        path: '/welcome',
+        name: 'welcome',
+        builder: (context, state) => const WelcomePage(),
+      ),
+      GoRoute(
+        path: '/dashboard',
+        name: 'dashboard',
+        builder: (context, state) => const DashboardPage(),
+      ),
+      GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const MyHomePage(title: 'ARWayz'),
+        builder: (context, state) => const DashboardPage(),
       ),
       GoRoute(
         path: '/explore',
