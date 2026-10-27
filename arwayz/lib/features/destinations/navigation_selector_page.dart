@@ -23,7 +23,11 @@ class NavigationSelectorPage extends StatelessWidget {
         title: const Text(
           'Select Your Campus Navigation Mode',
           textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 18,
+          ),
         ),
         backgroundColor: primaryDark,
         elevation: 0,
@@ -36,7 +40,11 @@ class NavigationSelectorPage extends StatelessWidget {
             border: Border.all(color: Colors.white.withOpacity(0.2)),
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
             onPressed: () => Navigator.maybePop(context),
             tooltip: 'Back',
           ),
@@ -62,16 +70,16 @@ class NavigationSelectorPage extends StatelessWidget {
 
           final List<(String, double, double, String)> liveCampusPlaces =
               (snapshot.hasData && snapshot.data != null)
-                  ? snapshot.data!.docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      return (
-                        (data['name'] ?? 'Unknown Building') as String,
-                        (data['latitude'] ?? 6.0794) as double,
-                        (data['longitude'] ?? 80.192) as double,
-                        (data['type'] ?? 'building') as String,
-                      );
-                    }).toList()
-                  : [];
+              ? snapshot.data!.docs.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return (
+                    (data['name'] ?? 'Unknown Building') as String,
+                    (data['latitude'] ?? 6.0794) as double,
+                    (data['longitude'] ?? 80.192) as double,
+                    (data['type'] ?? 'building') as String,
+                  );
+                }).toList()
+              : [];
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -117,7 +125,10 @@ class NavigationSelectorPage extends StatelessWidget {
                       title: 'AR Compass Arrow',
                       tagLine: 'AR CAMERA GUIDANCE',
                       icon: Icons.compass_calibration_rounded,
-                      gradientColors: [const Color(0xFF235559), const Color(0xFF3F727A)],
+                      gradientColors: [
+                        const Color(0xFF235559),
+                        const Color(0xFF3F727A),
+                      ],
                       accentColor: goldAccent,
                       description:
                           'Realtime green direction arrow overlaid on your camera feed with 3D AR location markers.',
@@ -144,7 +155,10 @@ class NavigationSelectorPage extends StatelessWidget {
                       title: 'Google Maps Outdoor',
                       tagLine: 'GPS & MAP ROUTING',
                       icon: Icons.map_rounded,
-                      gradientColors: [const Color(0xFF1A2D33), const Color(0xFF2C444E)],
+                      gradientColors: [
+                        const Color(0xFF1A2D33),
+                        const Color(0xFF2C444E),
+                      ],
                       accentColor: const Color(0xFF2A72D0),
                       description:
                           'Full interactive satellite map with markers, distance calculations, and turn-by-turn walking paths.',
@@ -153,7 +167,11 @@ class NavigationSelectorPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const OutdoorNavigationPage(),
+                            builder: (context) => OutdoorNavigationPage(
+                              destLat: lat,
+                              destLon: lon,
+                              destinationName: name,
+                            ),
                           ),
                         );
                       },
@@ -297,7 +315,10 @@ class NavigationSelectorPage extends StatelessWidget {
                   if (destinations.isEmpty)
                     const Text(
                       'No campus buildings loaded.',
-                      style: TextStyle(fontSize: 12, color: Colors.orangeAccent),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orangeAccent,
+                      ),
                     )
                   else
                     Wrap(
@@ -305,8 +326,12 @@ class NavigationSelectorPage extends StatelessWidget {
                       runSpacing: 10,
                       children: destinations.map((dest) {
                         return ElevatedButton.icon(
-                          onPressed: () =>
-                              onSelectDestination(dest.$1, dest.$2, dest.$3, dest.$4),
+                          onPressed: () => onSelectDestination(
+                            dest.$1,
+                            dest.$2,
+                            dest.$3,
+                            dest.$4,
+                          ),
                           icon: const Icon(Icons.near_me_rounded, size: 14),
                           label: Text(
                             dest.$1,
@@ -352,7 +377,11 @@ class NavigationSelectorPage extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.tips_and_updates_outlined, color: goldAccent, size: 22),
+              Icon(
+                Icons.tips_and_updates_outlined,
+                color: goldAccent,
+                size: 22,
+              ),
               SizedBox(width: 8),
               Text(
                 'Navigation Guidance Tips',
@@ -389,7 +418,11 @@ class NavigationSelectorPage extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 12.5, color: lightGray, height: 1.4),
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: lightGray,
+              height: 1.4,
+            ),
           ),
         ),
       ],

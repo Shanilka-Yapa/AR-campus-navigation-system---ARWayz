@@ -142,7 +142,8 @@ class AboutPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Faculty of Engineering, University of Ruhuna',
+                        'Department of Computer Engineering',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
                           color: steelBlue,
