@@ -257,21 +257,66 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
   LatLng get _mapTarget =>
       currentLocation ?? LatLng(widget.destLat, widget.destLng);
 
+  IconData get _departmentIcon {
+    final name = widget.placeName.toLowerCase();
+    if (name.contains('computer') || name.contains('information')) {
+      return Icons.computer_rounded;
+    }
+    if (name.contains('civil') || name.contains('environment')) {
+      return Icons.foundation_rounded;
+    }
+    if (name.contains('mechanical') || name.contains('manufacturing')) {
+      return Icons.precision_manufacturing_rounded;
+    }
+    if (name.contains('electrical') || name.contains('electronic')) {
+      return Icons.electric_bolt_rounded;
+    }
+    return Icons.business_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          widget.placeName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+        toolbarHeight: 76,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_departmentIcon, color: const Color(0xFF8FD0C9), size: 25),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                widget.placeName,
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.clip,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  height: 1.15,
+                ),
+              ),
+            ),
+          ],
+        ),
+        titleSpacing: 4,
+        actions: const [SizedBox(width: 48)],
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: [primaryDark, deepTeal]),
           ),
         ),
-        backgroundColor: primaryDark.withOpacity(0.9),
-        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        elevation: 6,
         centerTitle: true,
         leading: Container(
           margin: const EdgeInsets.all(8),
@@ -297,9 +342,11 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
             onMapCreated: (controller) {
               mapController = controller;
               mapController!.setMapStyle(_customMapStyle);
-              _fitMap();
+              WidgetsBinding.instance.addPostFrameCallback((_) => _fitMap());
             },
             initialCameraPosition: CameraPosition(target: _mapTarget, zoom: 15),
+            style: _customMapStyle,
+            mapType: MapType.normal,
             myLocationEnabled: currentLocation != null,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
