@@ -15,7 +15,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: scaffoldBg,
+      //backgroundColor: scaffoldBg,
       body: Stack(
         children: [
           // Background Hero Image (Faculty Gate) with Gradient Overlay
@@ -30,6 +30,7 @@ class WelcomePage extends StatelessWidget {
                 Image.asset(
                   'assets/images/gate.png',
                   fit: BoxFit.cover,
+                  alignment: Alignment.center,
                 ),
                 Container(
                   decoration: BoxDecoration(
@@ -38,8 +39,8 @@ class WelcomePage extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         primaryDark.withOpacity(0.2),
-                        primaryDark.withOpacity(0.75),
-                        scaffoldBg,
+                        primaryDark.withOpacity(0.55),
+                        const Color.fromARGB(255, 56, 56, 56),
                       ],
                       stops: const [0.0, 0.65, 1.0],
                     ),
@@ -51,11 +52,16 @@ class WelcomePage extends StatelessWidget {
                   right: 0,
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -88,7 +94,10 @@ class WelcomePage extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 20.0,
+                    ),
                     decoration: const BoxDecoration(
                       color: scaffoldBg,
                       borderRadius: BorderRadius.only(
@@ -103,27 +112,18 @@ class WelcomePage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: primaryDark,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.alt_route_rounded,
-                                color: goldAccent,
-                                size: 20,
-                              ),
+                            Image.asset(
+                              'assets/images/arwayz_icon.png',
+                              width: 42,
+                              height: 42,
+                              fit: BoxFit.contain,
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'ARWayz',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: primaryDark,
-                                letterSpacing: 0.8,
-                              ),
+                            const SizedBox(width: 4),
+                            Image.asset(
+                              'assets/images/arwayz_wordmark.png',
+                              width: 122,
+                              height: 34,
+                              fit: BoxFit.contain,
                             ),
                           ],
                         ),
