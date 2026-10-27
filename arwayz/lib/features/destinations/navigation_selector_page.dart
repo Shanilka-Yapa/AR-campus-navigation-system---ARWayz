@@ -12,6 +12,7 @@ class NavigationSelectorPage extends StatelessWidget {
   static const Color mutedTeal = Color(0xFF3F727A);
   static const Color steelBlue = Color(0xFF7B929C);
   static const Color lightGray = Color(0xFFBEC4C4);
+  static const Color goldAccent = Color(0xFFB7791F);
   static const Color scaffoldBg = Color(0xFFF8F9F9);
 
   @override
@@ -20,13 +21,26 @@ class NavigationSelectorPage extends StatelessWidget {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: const Text(
-          'Choose Navigation Method',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          'Select Your Campus Navigation Mode',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
         ),
         backgroundColor: primaryDark,
-        elevation: 4,
-        shadowColor: primaryDark.withOpacity(0.5),
+        elevation: 0,
         centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('buildings').snapshots(),
@@ -40,73 +54,120 @@ class NavigationSelectorPage extends StatelessWidget {
           if (snapshot.hasError) {
             return Center(
               child: Text(
-                'Error: ${snapshot.error}',
-                style: const TextStyle(color: Colors.red),
+                'Error loading destinations: ${snapshot.error}',
+                style: const TextStyle(color: Colors.redAccent),
               ),
             );
           }
 
           final List<(String, double, double, String)> liveCampusPlaces =
-              snapshot.data!.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return (
-              (data['name'] ?? 'Unknown') as String,
-              (data['latitude'] ?? 6.0794) as double,
-              (data['longitude'] ?? 80.192) as double,
-              (data['type'] ?? 'building') as String,
-            );
-          }).toList();
+              (snapshot.hasData && snapshot.data != null)
+                  ? snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return (
+                        (data['name'] ?? 'Unknown Building') as String,
+                        (data['latitude'] ?? 6.0794) as double,
+                        (data['longitude'] ?? 80.192) as double,
+                        (data['type'] ?? 'building') as String,
+                      );
+                    }).toList()
+                  : [];
 
-          return ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            children: [
-              _buildSectionHeader('Available Methods'),
-              const SizedBox(height: 16),
-              // --- AR NAVIGATION CARD ---
-              _buildMethodCard(
-                context,
-                title: 'AR Compass Arrow',
-                icon: Icons.explore_rounded,
-                subtitle: 'Realtime camera-based guidance',
-                description:
-                    'Green arrow + turn-by-turn directions + 3D AR marker at destination.',
-                accentColor: mutedTeal,
-                destinations: liveCampusPlaces,
-                onSelect: (destName, lat, lon, type) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RoutePreviewPage(
-                        destLat: lat,
-                        destLng: lon,
-                        placeName: destName,
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Subtitle Banner Box
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+                  decoration: const BoxDecoration(
+                    color: primaryDark,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Choose between AR camera compass guidance, GPS maps',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: Colors.white.withOpacity(0.85),
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 20),
-              // --- GOOGLE MAPS CARD ---
-              _buildMethodCard(
-                context,
-                title: 'Google Maps',
-                icon: Icons.map_rounded,
-                subtitle: 'Traditional map-based navigation',
-                description:
-                    'Full map view with markers, directions, and turn-by-turn guidance.',
-                accentColor: steelBlue,
-                destinations: liveCampusPlaces,
-                onSelect: (destName, lat, lon, type) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OutdoorNavigationPage(),
+
+              // Main Navigation Modes Content
+              SliverPadding(
+                padding: const EdgeInsets.all(20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildSectionHeader('Outdoor Navigation Options'),
+                    const SizedBox(height: 16),
+
+                    // --- MODE 1: AR COMPASS ARROW CARD ---
+                    _buildModernMethodCard(
+                      context,
+                      title: 'AR Compass Arrow',
+                      tagLine: 'AR CAMERA GUIDANCE',
+                      icon: Icons.compass_calibration_rounded,
+                      gradientColors: [const Color(0xFF235559), const Color(0xFF3F727A)],
+                      accentColor: goldAccent,
+                      description:
+                          'Realtime green direction arrow overlaid on your camera feed with 3D AR location markers.',
+                      destinations: liveCampusPlaces,
+                      onSelectDestination: (name, lat, lon, type) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RoutePreviewPage(
+                              destLat: lat,
+                              destLng: lon,
+                              placeName: name,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+
+                    const SizedBox(height: 20),
+
+                    // --- MODE 2: GOOGLE MAPS OUTDOOR CARD ---
+                    _buildModernMethodCard(
+                      context,
+                      title: 'Google Maps Outdoor',
+                      tagLine: 'GPS & MAP ROUTING',
+                      icon: Icons.map_rounded,
+                      gradientColors: [const Color(0xFF1A2D33), const Color(0xFF2C444E)],
+                      accentColor: const Color(0xFF2A72D0),
+                      description:
+                          'Full interactive satellite map with markers, distance calculations, and turn-by-turn walking paths.',
+                      destinations: liveCampusPlaces,
+                      onSelectDestination: (name, lat, lon, type) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OutdoorNavigationPage(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Navigation Guidance Tips
+                    _buildTipsCard(),
+
+                    const SizedBox(height: 24),
+                  ]),
+                ),
               ),
-              const SizedBox(height: 24),
-              _buildInfoCard(),
             ],
           );
         },
@@ -114,69 +175,90 @@ class NavigationSelectorPage extends StatelessWidget {
     );
   }
 
-  // --- UI HELPER COMPONENTS ---
-
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
+      textAlign: TextAlign.center,
       style: const TextStyle(
         color: steelBlue,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.2,
-        fontSize: 13,
+        fontSize: 12.5,
       ),
     );
   }
 
-  Widget _buildMethodCard(
+  /// Modern Interactive Grid Card
+  Widget _buildModernMethodCard(
     BuildContext context, {
     required String title,
+    required String tagLine,
     required IconData icon,
-    required String subtitle,
-    required String description,
+    required List<Color> gradientColors,
     required Color accentColor,
+    required String description,
     required List<(String, double, double, String)> destinations,
-    required Function(String, double, double, String) onSelect,
+    required Function(String, double, double, String) onSelectDestination,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: primaryDark.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Gradient Header
             Container(
-              padding: const EdgeInsets.all(16),
-              color: accentColor.withOpacity(0.1),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: Row(
                 children: [
-                  Icon(icon, color: accentColor, size: 28),
-                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          tagLine,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: accentColor,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
                           title,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: primaryDark,
+                            color: Colors.white,
                           ),
-                        ),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(fontSize: 13, color: steelBlue),
                         ),
                       ],
                     ),
@@ -184,56 +266,66 @@ class NavigationSelectorPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Description & Destination Selection Grid
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     description,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13.5,
                       height: 1.5,
                       color: primaryDark,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Divider(color: lightGray, height: 1),
-                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: Color(0xFFECEFF1)),
+                  const SizedBox(height: 14),
                   const Text(
-                    'SELECT DESTINATION',
+                    'SELECT DESTINATION TO START',
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.bold,
                       color: steelBlue,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.6,
                     ),
                   ),
                   const SizedBox(height: 12),
                   if (destinations.isEmpty)
-                    const Text("No buildings found in database.",
-                        style: TextStyle(fontSize: 12, color: Colors.redAccent))
+                    const Text(
+                      'No campus buildings loaded.',
+                      style: TextStyle(fontSize: 12, color: Colors.orangeAccent),
+                    )
                   else
                     Wrap(
                       spacing: 8,
-                      runSpacing: 8,
+                      runSpacing: 10,
                       children: destinations.map((dest) {
-                        return ElevatedButton(
-                          onPressed: () => onSelect(dest.$1, dest.$2, dest.$3, dest.$4),
+                        return ElevatedButton.icon(
+                          onPressed: () =>
+                              onSelectDestination(dest.$1, dest.$2, dest.$3, dest.$4),
+                          icon: const Icon(Icons.near_me_rounded, size: 14),
+                          label: Text(
+                            dest.$1,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: deepTeal,
                             foregroundColor: Colors.white,
-                            elevation: 0,
+                            elevation: 2,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              horizontal: 14,
+                              vertical: 10,
                             ),
-                          ),
-                          child: Text(
-                            dest.$1,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -247,7 +339,7 @@ class NavigationSelectorPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildTipsCard() {
     return Container(
       decoration: BoxDecoration(
         color: primaryDark,
@@ -255,14 +347,16 @@ class NavigationSelectorPage extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.tips_and_updates_outlined, color: lightGray),
+              Icon(Icons.tips_and_updates_outlined, color: goldAccent, size: 22),
               SizedBox(width: 8),
               Text(
-                'Navigation Tips',
+                'Navigation Guidance Tips',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -271,12 +365,16 @@ class NavigationSelectorPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildInfoRow(Icons.check_circle_outline, 
-              'AR Compass: Keep device level and works without GPS.'),
-          const SizedBox(height: 12),
-          _buildInfoRow(Icons.check_circle_outline, 
-              'Google Maps: Full turn-by-turn. Requires active internet.'),
+          const SizedBox(height: 14),
+          _buildInfoRow(
+            Icons.check_circle_outline,
+            'AR Compass: Hold phone vertically. Works outdoors without requiring continuous GPS signal.',
+          ),
+          const SizedBox(height: 10),
+          _buildInfoRow(
+            Icons.check_circle_outline,
+            'Google Maps: Outdoor turn-by-turn routing using live device GPS location.',
+          ),
         ],
       ),
     );
@@ -291,7 +389,7 @@ class NavigationSelectorPage extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: lightGray, height: 1.4),
+            style: const TextStyle(fontSize: 12.5, color: lightGray, height: 1.4),
           ),
         ),
       ],

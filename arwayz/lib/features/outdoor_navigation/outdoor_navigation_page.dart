@@ -17,7 +17,7 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
   static const LatLng DESTINATION = LatLng(
     6.0793684,
     80.1919646,
-  ); // Faculty of Engineering, Galle
+  );
   LatLng? _currentLocation;
 
   Set<Marker> markers = {};
@@ -36,7 +36,6 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
 
   Future<void> _getCurrentLocation() async {
     try {
-      // Check and request location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -62,7 +61,6 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
 
   void _addMarkers() {
     Set<Marker> newMarkers = {
-      // Current location marker
       if (_currentLocation != null)
         Marker(
           markerId: const MarkerId('current_location'),
@@ -73,7 +71,6 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
-      // Destination marker
       Marker(
         markerId: const MarkerId('destination'),
         position: DESTINATION,
@@ -93,7 +90,7 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
     mapController.animateCamera(
       CameraUpdate.newLatLngBounds(_calculateBounds(), 100),
     );
-    }
+  }
 
   LatLngBounds _calculateBounds() {
     double minLat = _currentLocation?.latitude ?? DESTINATION.latitude;
@@ -136,10 +133,25 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
       appBar: AppBar(
         title: const Text(
           'Navigate to University',
-          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: const Color(0xFF1A2D33),
+        centerTitle: true,
         elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: _currentLocation == null
           ? const Center(child: CircularProgressIndicator())
@@ -170,13 +182,13 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                       FloatingActionButton(
                         onPressed: _animateToDestination,
                         backgroundColor: const Color(0xFF1A2D33),
-                        child: const Icon(Icons.center_focus_strong),
+                        child: const Icon(Icons.center_focus_strong_rounded),
                       ),
                       const SizedBox(height: 10),
                       FloatingActionButton(
                         onPressed: _getCurrentLocation,
                         backgroundColor: const Color(0xFF1A2D33),
-                        child: const Icon(Icons.location_searching),
+                        child: const Icon(Icons.location_searching_rounded),
                       ),
                     ],
                   ),
@@ -189,6 +201,10 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black26,
@@ -197,7 +213,7 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -207,19 +223,20 @@ class _OutdoorNavigationPageState extends State<OutdoorNavigationPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A2D33),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         ElevatedButton.icon(
                           onPressed: _openGoogleMapsNavigation,
-                          icon: const Icon(Icons.directions),
+                          icon: const Icon(Icons.directions_rounded),
                           label: const Text('Get Directions'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1A2D33),
                             foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 48),
+                            minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                         ),
