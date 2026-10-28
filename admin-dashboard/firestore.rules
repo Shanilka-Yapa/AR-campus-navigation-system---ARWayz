@@ -1,0 +1,114 @@
+// ARWayz Firestore security rules.
+//
+// This file is a REFERENCE COPY kept with the admin dashboard. The Firebase
+// CLI is not installed on this machine, so deploy it by pasting the contents
+// into the Firebase console:
+//   Firestore Database -> Rules -> paste -> Publish
+//
+// IMPORTANT: publishing replaces the entire ruleset, so the `buildings` block
+// below must be kept. Without it the app's existing building screens lose
+// access to Firestore.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function studentDoc() {
+      return get(/databases/$(database)/documents/students/$(request.auth.uid));
+    }
+
+    // A student may only post once an admin has approved them. Pending and
+    // blocked accounts can sign in and read, but write nothing.
+    function isApprovedStudent() {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/students/$(request.auth.uid))
+          && studentDoc().data.status == 'approved';
+    }
+
+    // Admin allowlist. Documents are created from the Firebase console only;
+    // nothing in any client may write here.
+    match /admins/{uid} {
+      allow read:  if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Student registrations. A student creates their own record as `pending`
+    // and can never change its status; only an admin approves or blocks.
+    match /students/{uid} {
+      allow read: if isAdmin()
+                  || (request.auth != null && request.auth.uid == uid);
+
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.name is string
+                    && request.resource.data.indexNumber is string
+                    && request.resource.data.email is string;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // Events: anyone may read (the student app is unauthenticated),
+    // only allowlisted admins may write.
+    match /events/{eventId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Poster images, one document per event, holding a compressed base64
+    // JPEG. Kept separate from the event so listing events does not download
+    // image bytes. Same access as events: public read, admin-only writes.
+    match /event_posters/{eventId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Comments: readable by everyone, written only by approved students
+    // writing as themselves. A comment is never edited, only removed - by its
+    // author or by an admin moderating.
+    match /event_comments/{commentId} {
+      allow read: if true;
+
+      allow create: if isApprovedStudent()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000;
+
+      allow update: if false;
+
+      allow delete: if isAdmin()
+                    || (request.auth != null
+                        && resource.data.uid == request.auth.uid);
+    }
+
+    // Likes: one document per student per event, with the id pinned to both
+    // so a student cannot like the same event twice or like as someone else.
+    match /event_likes/{likeId} {
+      allow read: if true;
+
+      allow create: if isApprovedStudent()
+                    && request.resource.data.uid == request.auth.uid
+                    && likeId == request.resource.data.eventId + '_' + request.auth.uid;
+
+      allow update: if false;
+
+      allow delete: if isAdmin()
+                    || (request.auth != null
+                        && resource.data.uid == request.auth.uid);
+    }
+
+    // Buildings: read by the events venue picker and written by the app's
+    // existing building admin, which does not sign in with Firebase Auth.
+    // Left as-is so current behaviour is unchanged.
+    match /buildings/{buildingId} {
+      allow read:  if true;
+      allow write: if true;
+    }
+  }
+}
