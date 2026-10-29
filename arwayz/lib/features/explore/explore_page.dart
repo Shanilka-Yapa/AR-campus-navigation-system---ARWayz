@@ -146,7 +146,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -317,7 +317,7 @@ class _ExplorePageState extends State<ExplorePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryDark.withOpacity(0.05),
+            color: primaryDark.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -326,7 +326,7 @@ class _ExplorePageState extends State<ExplorePage> {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: deepTeal.withOpacity(0.1),
+          backgroundColor: deepTeal.withValues(alpha: 0.1),
           child: Icon(item.icon, color: deepTeal, size: 22),
         ),
         title: Text(
@@ -367,7 +367,7 @@ class _ExplorePageState extends State<ExplorePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryDark.withOpacity(0.06),
+            color: primaryDark.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -383,7 +383,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, color: color, size: 26),
@@ -422,14 +422,14 @@ class _ExplorePageState extends State<ExplorePage> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, size: 16, color: deepTeal.withOpacity(0.8)),
+                    Icon(Icons.check_circle, size: 16, color: deepTeal.withValues(alpha: 0.8)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         item,
                         style: TextStyle(
                           fontSize: 13,
-                          color: primaryDark.withOpacity(0.8),
+                          color: primaryDark.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -472,7 +472,7 @@ class _ExplorePageState extends State<ExplorePage> {
             '4-Year Full Time Degree Program accredited by the Institution of Engineers Sri Lanka (IESL) under the Washington Accord.',
             style: TextStyle(
               fontSize: 13.5,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.5,
             ),
           ),

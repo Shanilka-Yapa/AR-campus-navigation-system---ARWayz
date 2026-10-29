@@ -38,8 +38,8 @@ class WelcomePage extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        primaryDark.withOpacity(0.2),
-                        primaryDark.withOpacity(0.55),
+                        primaryDark.withValues(alpha: 0.2),
+                        primaryDark.withValues(alpha: 0.55),
                         const Color.fromARGB(255, 56, 56, 56),
                       ],
                       stops: const [0.0, 0.65, 1.0],
@@ -57,10 +57,10 @@ class WelcomePage extends StatelessWidget {
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Row(
@@ -162,7 +162,7 @@ class WelcomePage extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13.5,
-                                color: primaryDark.withOpacity(0.78),
+                                color: primaryDark.withValues(alpha: 0.78),
                                 height: 1.5,
                               ),
                             ),
@@ -182,7 +182,7 @@ class WelcomePage extends StatelessWidget {
                               backgroundColor: primaryDark,
                               foregroundColor: Colors.white,
                               elevation: 4,
-                              shadowColor: primaryDark.withOpacity(0.4),
+                              shadowColor: primaryDark.withValues(alpha: 0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),

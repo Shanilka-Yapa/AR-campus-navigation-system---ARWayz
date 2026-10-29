@@ -4,33 +4,35 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
 class Building3DView extends StatefulWidget {
-  const Building3DView({super.key});
+  final String assetPath;
+
+  const Building3DView({
+    super.key,
+    this.assetPath = 'assets/index.html',
+  });
 
   @override
   State<Building3DView> createState() => _Building3DViewState();
 }
 
 class _Building3DViewState extends State<Building3DView> {
-  static const _viewType = 'arwayz-building-3d-view';
-  static bool _viewFactoryRegistered = false;
+  late final String _viewType;
 
   @override
   void initState() {
     super.initState();
-    if (!_viewFactoryRegistered) {
-      ui_web.platformViewRegistry.registerViewFactory(_viewType, (viewId) {
-        return web.HTMLIFrameElement()
-          ..src = 'assets/assets/index.html'
-          ..style.border = 'none'
-          ..style.width = '100%'
-          ..style.height = '100%';
-      });
-      _viewFactoryRegistered = true;
-    }
+    _viewType = 'arwayz-3d-view-${widget.assetPath.replaceAll(' ', '-').replaceAll('/', '-')}';
+    ui_web.platformViewRegistry.registerViewFactory(_viewType, (viewId) {
+      return web.HTMLIFrameElement()
+        ..src = widget.assetPath
+        ..style.border = 'none'
+        ..style.width = '100%'
+        ..style.height = '100%';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const HtmlElementView(viewType: _viewType);
+    return HtmlElementView(viewType: _viewType);
   }
 }

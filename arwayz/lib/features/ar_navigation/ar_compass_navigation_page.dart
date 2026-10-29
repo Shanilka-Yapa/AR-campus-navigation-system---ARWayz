@@ -252,7 +252,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                 border: Border.all(color: _green, width: 2),
                 boxShadow: [
                   BoxShadow(
-                      color: _green.withOpacity(0.3),
+                      color: _green.withValues(alpha: 0.3),
                       blurRadius: 40,
                       spreadRadius: 4),
                 ],
@@ -330,7 +330,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
         if (_camReady)
           AnimatedBuilder(
             animation: _flowCtrl,
-            builder: (_, __) => CustomPaint(
+            builder: (_, _) => CustomPaint(
               painter: _GroundPathPainter(
                 angleDiff: _locationReady ? _angleDiff : 0,
                 flowValue: _flowCtrl.value,
@@ -442,7 +442,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
       decoration: BoxDecoration(
         color: Colors.black54,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.6)),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, color: color, size: 13),
@@ -460,7 +460,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.45),
+        color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(50),
         border: Border.all(color: Colors.white30, width: 1.5),
         boxShadow: [
@@ -506,7 +506,7 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: _green.withOpacity(0.1),
+                  color: _green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: _green, size: 25),
@@ -538,10 +538,10 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _locationColor.withOpacity(0.1),
+                  color: _locationColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border:
-                      Border.all(color: _locationColor.withOpacity(0.3)),
+                      Border.all(color: _locationColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(_locationIcon,
                     style: const TextStyle(fontSize: 22)),
@@ -595,9 +595,9 @@ class _ARCompassNavigationPageState extends State<ARCompassNavigationPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.green.shade900.withOpacity(0.92),
+        color: Colors.green.shade900.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _green.withOpacity(0.5)),
+        border: Border.all(color: _green.withValues(alpha: 0.5)),
       ),
       child: Row(children: [
         const Icon(Icons.check_circle_rounded, color: _green, size: 22),
@@ -691,9 +691,9 @@ class _GroundPathPainter extends CustomPainter {
         begin: Alignment.bottomCenter,
         end: Alignment.topCenter,
         colors: [
-          pathColor.withOpacity(0.50),
-          pathColor.withOpacity(0.22),
-          pathColor.withOpacity(0.0),
+          pathColor.withValues(alpha: 0.50),
+          pathColor.withValues(alpha: 0.22),
+          pathColor.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.55, 1.0],
       ).createShader(Rect.fromPoints(Offset(vpX, size.height), vp));
@@ -702,7 +702,7 @@ class _GroundPathPainter extends CustomPainter {
 
     // ── 2. Edge lines ─────────────────────────────────────────
     final edgePaint = Paint()
-      ..color = pathColor.withOpacity(0.45)
+      ..color = pathColor.withValues(alpha: 0.45)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -734,7 +734,7 @@ class _GroundPathPainter extends CustomPainter {
       final double alpha = math.sin(t * math.pi).clamp(0.15, 1.0);
 
       final chevPaint = Paint()
-        ..color = Colors.white.withOpacity(alpha * 0.92)
+        ..color = Colors.white.withValues(alpha: alpha * 0.92)
         ..strokeWidth = _lerp(3.2, 1.0, tP)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
