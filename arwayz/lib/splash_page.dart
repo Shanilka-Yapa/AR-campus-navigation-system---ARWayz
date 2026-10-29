@@ -84,7 +84,7 @@ class _SplashPageState extends State<SplashPage>
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: goldAccent.withOpacity(0.12),
+                    color: goldAccent.withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -96,7 +96,7 @@ class _SplashPageState extends State<SplashPage>
                   height: 320,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: steelBlue.withOpacity(0.15),
+                    color: steelBlue.withValues(alpha: 0.15),
                   ),
                 ),
               ),
@@ -164,7 +164,7 @@ class _SplashPageState extends State<SplashPage>
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: _controller.value,
-                      backgroundColor: Colors.white.withOpacity(0.1),
+                      backgroundColor: Colors.white.withValues(alpha: 0.1),
                       color: goldAccent,
                       minHeight: 3,
                     ),
@@ -241,7 +241,7 @@ class _LogoPathPainter extends CustomPainter {
     // AR Needle Accent Dot
     if (progress > 0.6) {
       final dotPaint = Paint()
-        ..color = accentColor.withOpacity(((progress - 0.6) / 0.4).clamp(0.0, 1.0))
+        ..color = accentColor.withValues(alpha: ((progress - 0.6) / 0.4).clamp(0.0, 1.0))
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(w * 0.5, h * 0.55), 6 * progress, dotPaint);
     }
@@ -288,7 +288,7 @@ class _TextStrokePainter extends CustomPainter {
       style: textStyle.copyWith(
         foreground: Paint()
           ..style = PaintingStyle.fill
-          ..color = Colors.white.withOpacity(progress.clamp(0.2, 1.0)),
+          ..color = Colors.white.withValues(alpha: progress.clamp(0.2, 1.0)),
       ),
     );
 
@@ -314,7 +314,7 @@ class _TextStrokePainter extends CustomPainter {
           foreground: Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5
-            ..color = const Color(0xFFB7791F).withOpacity((progress * 0.8).clamp(0.0, 0.8)),
+            ..color = const Color(0xFFB7791F).withValues(alpha: (progress * 0.8).clamp(0.0, 0.8)),
         ),
       );
 

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Building3DView extends StatelessWidget {
-  const Building3DView({super.key});
+  final String assetPath;
+
+  const Building3DView({
+    super.key,
+    this.assetPath = 'assets/index.html',
+  });
 
   @override
   Widget build(BuildContext context) {

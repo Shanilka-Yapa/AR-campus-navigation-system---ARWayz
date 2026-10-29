@@ -321,9 +321,9 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
           ),
           child: IconButton(
             icon: const Icon(
@@ -387,11 +387,11 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.94),
+                color: Colors.white.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryDark.withOpacity(0.15),
+                    color: primaryDark.withValues(alpha: 0.15),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
@@ -517,7 +517,7 @@ class _RoutePreviewPageState extends State<RoutePreviewPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: primaryDark.withOpacity(0.88),
+          color: primaryDark.withValues(alpha: 0.88),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(

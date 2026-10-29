@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department of Civil & Environmental Engineering - 3D Viewer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- GSAP for smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cee: {
+                            yellow: '#F59E0B',
+                            yellowLight: '#FBBF24',
+                            grey: '#4B5563',
+                            greyDark: '#1F2937',
+                            greyLight: '#9CA3AF',
+                            blueDark: '#0F172A',
+                            accent: '#3B82F6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            background-color: #0b0f19;
+        }
+
+        /* Canvas styling */
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Grid Background Pattern for Blueprint theme */
+        .blueprint-bg {
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        .glass-button:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        .glass-button.active {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #F59E0B;
+            color: #FBBF24;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(245, 158, 11, 0.4);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 158, 11, 0.8);
+        }
+
+        /* Custom animation pulse */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="text-slate-100 antialiased overflow-hidden">
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div class="relative z-10 w-full h-screen flex flex-col justify-between pointer-events-none p-4 md:p-6">
+        
+        <!-- TOP HEADER BAR -->
+        <header class="flex justify-between items-start w-full">
+            <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-lg shadow-2xl border-l-4 border-l-amber-500">
+                <div class="flex items-center gap-2 text-xs font-mono text-amber-400 font-semibold tracking-wider uppercase mb-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                    3D Architectural BIM Visualizer
+                </div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
+                    Department of Civil & Environmental Engineering
+                </h1>
+                <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                    <i class="fa-solid fa-building text-slate-500"></i> Straight Structural Layout • Interactive Floor Cutaway
+                </p>
+            </div>
+
+            <!-- Top Right Action Controls -->
+            <div class="flex flex-wrap gap-2 pointer-events-auto">
+                <button id="blueprint-toggle" title="Toggle Blueprint Theme" class="glass-button p-3 rounded-xl text-slate-200 hover:text-amber-400 flex items-center gap-2 text-sm font-medium">
+                    <i class="fa-solid fa-drafting-compass text-amber-500"></i>
+                    <span class="hidden md:inline">Blueprint View</span>
+                </button>
+                <button id="reset-cam" title="Reset Camera View" class="glass-button p-3 rounded-xl text-slate-200 hover:text-amber-400 flex items-center gap-2 text-sm font-medium">
+                    <i class="fa-solid fa-arrows-to-dot text-amber-500"></i>
+                    <span class="hidden md:inline">Reset View</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CENTER FLOATING NOTIFICATION / TOOLTIP -->
+        <div id="interaction-hint" class="self-center glass-panel px-4 py-2 rounded-full text-xs font-mono text-slate-300 pointer-events-none transition-opacity duration-500 opacity-90 flex items-center gap-2 shadow-lg">
+            <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
+            Click on any room or use the floor selector to inspect details
+        </div>
+
+        <!-- MAIN BOTTOM & SIDE NAVIGATION LAYOUT -->
+        <div class="flex flex-col md:flex-row justify-between items-end gap-4 w-full">
+            
+            <!-- LEFT SIDE PANEL: Floor Selector & View Modes -->
+            <div class="glass-panel p-3 rounded-2xl pointer-events-auto flex flex-col gap-2 w-full md:w-64 shadow-2xl">
+                <div class="text-xs font-mono text-slate-400 uppercase tracking-wider px-2 pt-1 font-semibold flex justify-between items-center">
+                    <span>Floor Levels</span>
+                    <i class="fa-solid fa-layer-group text-amber-500"></i>
+                </div>
+                
+                <div class="flex flex-row md:flex-col gap-1.5 overflow-x-auto">
+                    <button class="floor-btn glass-button active py-2 px-3 rounded-xl text-xs font-medium text-left flex items-center justify-between" data-floor="all">
+                        <span><i class="fa-solid fa-building text-slate-400 mr-2"></i>Full Building</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-amber-400">All</span>
+                    </button>
+                    <button class="floor-btn glass-button py-2 px-3 rounded-xl text-xs font-medium text-left flex items-center justify-between" data-floor="3">
+                        <span><i class="fa-solid fa-flask text-slate-400 mr-2"></i>Floor 3</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Water / Waste Water</span>
+                    </button>
+                    <button class="floor-btn glass-button py-2 px-3 rounded-xl text-xs font-medium text-left flex items-center justify-between" data-floor="2">
+                        <span><i class="fa-solid fa-road text-slate-400 mr-2"></i>Floor 2</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Transport / Structural</span>
+                    </button>
+                    <button class="floor-btn glass-button py-2 px-3 rounded-xl text-xs font-medium text-left flex items-center justify-between" data-floor="1">
+                        <span><i class="fa-solid fa-cubes text-slate-400 mr-2"></i>Floor 1</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Geotechnical / Concrete</span>
+                    </button>
+                    <button class="floor-btn glass-button py-2 px-3 rounded-xl text-xs font-medium text-left flex items-center justify-between" data-floor="0">
+                        <span><i class="fa-solid fa-door-open text-slate-400 mr-2"></i>Ground Floor</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Lobby / Board / Head / TO / Survey</span>
+                    </button>
+                </div>
+
+                <!-- Explosion Slider -->
+                <div class="mt-2 pt-2 border-t border-slate-700/50 px-2">
+                    <div class="flex justify-between items-center text-xs font-mono text-slate-300 mb-1">
+                        <span>Exploded View</span>
+                        <span id="explode-val" class="text-amber-400">0%</span>
+                    </div>
+                    <input type="range" id="explode-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                </div>
+            </div>
+
+            <!-- CENTER BOTTOM: Camera Angle Presets -->
+            <div class="glass-panel p-2 rounded-2xl pointer-events-auto flex items-center gap-1.5 self-center shadow-2xl">
+                <button class="cam-preset glass-button active px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5" data-preset="perspective">
+                    <i class="fa-solid fa-cube text-amber-500"></i> Perspective
+                </button>
+                <button class="cam-preset glass-button px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5" data-preset="front">
+                    <i class="fa-solid fa-eye text-amber-500"></i> Front Facade
+                </button>
+                <button class="cam-preset glass-button px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5" data-preset="top">
+                    <i class="fa-solid fa-map text-amber-500"></i> Top Plan
+                </button>
+                <button class="cam-preset glass-button px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5" data-preset="side">
+                    <i class="fa-solid fa-border-all text-amber-500"></i> Side Profile
+                </button>
+            </div>
+
+            <!-- RIGHT SIDE PANEL: Detailed Room Info Card -->
+            <div id="info-panel" class="glass-panel p-4 rounded-2xl pointer-events-auto w-full md:w-80 shadow-2xl transition-all duration-300 border-t-2 border-t-amber-500">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-700/60 mb-3">
+                    <span id="info-floor-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 uppercase font-bold">
+                        Ground Floor (Middle)
+                    </span>
+                    <button id="close-info" class="text-slate-400 hover:text-white text-xs p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <h2 id="info-title" class="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                    <i id="info-icon" class="fa-solid fa-landmark text-amber-400"></i>
+                    <span>                    Middle Lobby</span>
+                </h2>
+
+                <p id="info-desc" class="text-xs text-slate-300 leading-relaxed mb-4">
+                    Central ground floor lobby and main thoroughfare leading to the academic wings.
+                </p>
+
+                <div class="space-y-2 text-xs">
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                        <div class="text-[10px] font-mono text-slate-400 uppercase">Key Facilities & Equipment</div>
+                        <div id="info-equipment" class="font-medium text-slate-200 mt-0.5">
+                            Information Desk, Display Models, Main Entrance Access
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                        <div class="text-[10px] font-mono text-slate-400 uppercase">Departmental Focus</div>
+                        <div id="info-focus" class="font-medium text-amber-300 mt-0.5">
+                            Main Lobby & Circulation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // Room Data Registry matching the architectural requirements
+        const ROOM_DATA = {
+            'lobby': {
+                name: 'Middle Lobby',
+                floor: 'Ground Floor (Middle)',
+                floorNum: 0,
+                icon: 'fa-archway',
+                desc: 'Central entrance lobby featuring gold brass department signage, main staircase access, and public reception area.',
+                equipment: 'Information Kiosk, Display Cases, Public Seating',
+                focus: 'Department Welcome & Circulation Hub'
+            },
+            'board_room': {
+                name: 'Board Meeting Room',
+                floor: 'Ground Floor (Right)',
+                floorNum: 0,
+                icon: 'fa-users-rectangle',
+                desc: 'Executive conference room for faculty meetings, research defense presentations, and departmental seminars.',
+                equipment: 'Conference Table, Audio-Visual System, Smart Display',
+                focus: 'Academic & Executive Governance'
+            },
+            'head_room': {
+                name: 'Head Room',
+                floor: 'Ground Floor (Right)',
+                floorNum: 0,
+                icon: 'fa-user-tie',
+                desc: 'Official office and administrative suite for the Department Head.',
+                equipment: 'Executive Workstation, Private Meeting Area',
+                focus: 'Departmental Leadership'
+            },
+            'to_room': {
+                name: 'TO Room',
+                floor: 'Ground Floor (Right)',
+                floorNum: 0,
+                icon: 'fa-screwdriver-wrench',
+                desc: 'Operations hub for senior technical staff overseeing department-wide laboratory safety and maintenance.',
+                equipment: 'Equipment Inventories, Safety Logs, Tech Workstations',
+                focus: 'Technical Operations & Logistics'
+            },
+            'survey_room': {
+                name: 'Survey Instrument Room',
+                floor: 'Ground Floor (Left)',
+                floorNum: 0,
+                icon: 'fa-compass-drafting',
+                desc: 'Secure storage and calibration facility for geodetic surveying gear, total stations, and GPS units.',
+                equipment: 'Total Stations, Optical Levels, DGPS, Laser Scanners, Tripods',
+                focus: 'Geomatics & Field Surveying Training'
+            },
+            'geotech_lab': {
+                name: 'Geotechnical Lab',
+                floor: 'Floor 1 (Left Wing)',
+                floorNum: 1,
+                icon: 'fa-mountain-city',
+                desc: 'Specialized lab for soil mechanics testing, triaxial shear analysis, and foundation engineering research.',
+                equipment: 'Direct Shear Apparatus, Triaxial Testing Rig, Oedometer, Sieve Shakers',
+                focus: 'Soil Mechanics & Geotechnical Testing'
+            },
+            'concrete_lab': {
+                name: 'Concrete Work Lab',
+                floor: 'Floor 1 (Right Wing)',
+                floorNum: 1,
+                icon: 'fa-cubes',
+                desc: 'Heavy materials laboratory equipped for concrete batching, compressive strength testing, and aggregate evaluation.',
+                equipment: 'Compressive Testing Machine (CTM), Concrete Mixer, Slump Cones, Curing Tanks',
+                focus: 'Concrete Technology & Materials Testing'
+            },
+            'trans_lab': {
+                name: 'Transportation Lab',
+                floor: 'Floor 2 (Left Wing)',
+                floorNum: 2,
+                icon: 'fa-road',
+                desc: 'Facility dedicated to bitumen binder testing, pavement mix design, and traffic flow simulation modeling.',
+                equipment: 'Ductility Tester, Penetrometer, Marshall Stability Apparatus, Viscometers',
+                focus: 'Pavement Materials & Traffic Systems'
+            },
+            'struct_lab': {
+                name: 'Structural Analysis Lab',
+                floor: 'Floor 2 (Right Wing)',
+                floorNum: 2,
+                icon: 'fa-diagram-project',
+                desc: 'Experimental facility for structural load analysis, frame deflection tests, and stress-strain diagnostics.',
+                equipment: 'Universal Testing Machine (UTM), Strain Gauge Indicators, Truss Test Frames',
+                focus: 'Structural Dynamics & Stress Mechanics'
+            },
+            'waste_water_lab': {
+                name: 'Waste Water Lab',
+                floor: 'Floor 3 (Left Wing)',
+                floorNum: 3,
+                icon: 'fa-recycle',
+                desc: 'Environmental research unit focused on sewage treatment, effluent analysis, and bio-remediation.',
+                equipment: 'BOD Incubators, COD Digesters, Fume Hoods, Centrifuges, Spectrophotometers',
+                focus: 'Wastewater Treatment & Environmental Tech'
+            },
+            'water_lab': {
+                name: 'Water Lab',
+                floor: 'Floor 3 (Right Wing)',
+                floorNum: 3,
+                icon: 'fa-droplet',
+                desc: 'Hydro-environmental testing lab for drinking water parameter testing, fluid mechanics flumes, and titration.',
+                equipment: 'Jar Test Apparatus, Turbidity Meters, Hydraulic Bench, pH/DO Meters',
+                focus: 'Hydraulics & Water Quality Engineering'
+            }
+        };
+
+        // THREE.JS Application State & Constants
+        const BUILDING_WIDTH = 38;
+        const BUILDING_DEPTH = 14;
+        const FLOOR_HEIGHT = 4.2;
+        const WALL_THICKNESS = 0.35;
+
+        let container, scene, camera, renderer, controls;
+        let floorGroups = [];
+        let roomMeshes = [];
+        let currentExplodeVal = 0;
+        let selectedFloor = 'all';
+        let raycaster, mouse;
+        let hoverObject = null;
+        let selectedRoomMesh = null;
+        let blueprintMode = false;
+
+        // Colors
+        const COLOR_GREY_WALL = 0x5a6578;
+        const COLOR_YELLOW_ACCENT = 0xF59E0B;
+        const COLOR_DARK_GREY = 0x27303f;
+        const COLOR_GLASS = 0x88c4eb;
+        const COLOR_GOLD = 0xd4af37;
+        const COLOR_GROUND_PAVER = 0x334155;
+
+        // Initialize App
+        window.addEventListener('load', () => {
+            initScene();
+            buildBuilding();
+            setupEvents();
+            animate();
+            
+            // Default load into nicely framed perspective view
+            setCameraPreset('perspective');
+        });
+
+        function initScene() {
+            container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0b0f19);
+            scene.fog = new THREE.FogExp2(0x0b0f19, 0.008);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 + 0.05; // allow slightly below horizon
+            controls.minDistance = 15;
+            controls.maxDistance = 120;
+            controls.target.set(0, (FLOOR_HEIGHT * 4) / 2, 0);
+
+            // Ambient & Key Lighting Setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfff5ea, 1.2);
+            sunLight.position.set(40, 60, 30);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 10;
+            sunLight.shadow.camera.far = 150;
+            const d = 35;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            scene.add(sunLight);
+
+            const fillLight = new THREE.DirectionalLight(0x88bbff, 0.4);
+            fillLight.position.set(-40, 20, -30);
+            scene.add(fillLight);
+
+            // Ground plane (Road & Site Environment)
+            createEnvironment();
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+        }
+
+        function createEnvironment() {
+            const groundGroup = new THREE.Group();
+
+            // Main Site Surface
+            const groundGeo = new THREE.PlaneGeometry(160, 160);
+            const groundMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111827, 
+                roughness: 0.9, 
+                metalness: 0.1 
+            });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            groundGroup.add(ground);
+
+            // Front Access Road
+            const roadGeo = new THREE.PlaneGeometry(140, 14);
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.8 });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, 0, BUILDING_DEPTH + 10);
+            road.receiveShadow = true;
+            groundGroup.add(road);
+
+            // Road markings
+            for (let x = -60; x <= 60; x += 10) {
+                const stripeGeo = new THREE.PlaneGeometry(4, 0.4);
+                const stripeMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+                const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+                stripe.rotation.x = -Math.PI / 2;
+                stripe.position.set(x, 0.05, BUILDING_DEPTH + 10);
+                groundGroup.add(stripe);
+            }
+
+            // Surrounding Trees / Greenery accents
+            const treeGeo = new THREE.ConeGeometry(2, 6, 6);
+            const trunkGeo = new THREE.CylinderGeometry(0.4, 0.5, 2, 6);
+            const treeMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.9 }); // Stylized architectural dark trees
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+
+            const treePositions = [
+                [-26, 0, 12], [26, 0, 12], [-26, 0, -12], [26, 0, -12],
+                [-30, 0, 0], [30, 0, 0], [-22, 0, 22], [22, 0, 22]
+            ];
+
+            treePositions.forEach(pos => {
+                const tree = new THREE.Group();
+                const foliage = new THREE.Mesh(treeGeo, treeMat);
+                foliage.position.y = 4;
+                foliage.castShadow = true;
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.y = 1;
+                trunk.castShadow = true;
+                tree.add(foliage);
+                tree.add(trunk);
+                tree.position.set(pos[0], pos[1], pos[2]);
+                groundGroup.add(tree);
+            });
+
+            scene.add(groundGroup);
+        }
+
+        // Procedural Construction of the 4-Story Building
+        function buildBuilding() {
+            // Re-usable Materials
+            const greyWallMat = new THREE.MeshStandardMaterial({ color: COLOR_GREY_WALL, roughness: 0.5 });
+            const yellowAccentMat = new THREE.MeshStandardMaterial({ color: COLOR_YELLOW_ACCENT, roughness: 0.3, metalness: 0.1 });
+            const darkGreyMat = new THREE.MeshStandardMaterial({ color: COLOR_DARK_GREY, roughness: 0.6 });
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: COLOR_GLASS,
+                transparent: true,
+                opacity: 0.45,
+                roughness: 0.1,
+                transmission: 0.8,
+                ior: 1.5
+            });
+
+            // Create 4 Floors (0 = Ground, 1 = F1, 2 = F2, 3 = F3)
+            for (let i = 0; i < 4; i++) {
+                const floorGroup = new THREE.Group();
+                floorGroup.position.y = i * FLOOR_HEIGHT;
+                floorGroup.userData = { floorIndex: i, baseHeight: i * FLOOR_HEIGHT };
+
+                // Floor Slab
+                const slabGeo = new THREE.BoxGeometry(BUILDING_WIDTH, 0.4, BUILDING_DEPTH);
+                const slabMat = new THREE.MeshStandardMaterial({ color: COLOR_GROUND_PAVER, roughness: 0.7 });
+                const slab = new THREE.Mesh(slabGeo, slabMat);
+                slab.position.y = 0.2;
+                slab.receiveShadow = true;
+                slab.castShadow = true;
+                floorGroup.add(slab);
+
+                // Build Exterior Facade (Straight rectangular design with Yellow panels)
+                buildFacadeForFloor(floorGroup, i, greyWallMat, yellowAccentMat, darkGreyMat, glassMat);
+
+                // Build Interior Partitions & Room Interactive Zones
+                buildInteriorsForFloor(floorGroup, i);
+
+                scene.add(floorGroup);
+                floorGroups.push(floorGroup);
+            }
+
+            // GROUND FLOOR FRONT SIGNAGE: "DEPARTMENT OF CIVIL AND ENVIRONMENTAL ENGINEERING"
+            createFrontSignage(floorGroups[0]);
+
+            // ROOF STRUCTURE (Top Canopy & Steel Trusses matching photo)
+            buildRoofCanopy();
+        }
+
+        function buildFacadeForFloor(floorGroup, floorIndex, greyMat, yellowMat, darkMat, glassMat) {
+            const height = FLOOR_HEIGHT - 0.4;
+            const halfW = BUILDING_WIDTH / 2;
+            const halfD = BUILDING_DEPTH / 2;
+
+            // Back Outer Wall (Solid straight rear wall with continuous windows)
+            const backWallGeo = new THREE.BoxGeometry(BUILDING_WIDTH, height, WALL_THICKNESS);
+            const backWall = new THREE.Mesh(backWallGeo, greyMat);
+            backWall.position.set(0, height / 2 + 0.4, -halfD);
+            backWall.castShadow = true;
+            floorGroup.add(backWall);
+
+            // Side Exterior Walls (Left & Right)
+            const sideWallGeo = new THREE.BoxGeometry(WALL_THICKNESS, height, BUILDING_DEPTH);
+            const leftWall = new THREE.Mesh(sideWallGeo, greyMat);
+            leftWall.position.set(-halfW, height / 2 + 0.4, 0);
+            leftWall.castShadow = true;
+            floorGroup.add(leftWall);
+
+            const rightWall = new THREE.Mesh(sideWallGeo, greyMat);
+            rightWall.position.set(halfW, height / 2 + 0.4, 0);
+            rightWall.castShadow = true;
+            floorGroup.add(rightWall);
+
+            // Front Facade Modular Bay Columns (Yellow framed accents + Grey pilasters)
+            const numBays = 7;
+            const bayWidth = BUILDING_WIDTH / numBays;
+
+            for (let b = 0; b < numBays; b++) {
+                const xPos = -halfW + bayWidth * b + bayWidth / 2;
+                const isCenter = (b === 3);
+
+                if (isCenter && floorIndex === 0) {
+                    // Central Main Entrance Doors on Ground Floor
+                    const doorFrameGeo = new THREE.BoxGeometry(bayWidth - 0.4, height, 0.4);
+                    const doorFrame = new THREE.Mesh(doorFrameGeo, darkMat);
+                    doorFrame.position.set(xPos, height / 2 + 0.4, halfD);
+                    floorGroup.add(doorFrame);
+
+                    const glassDoorGeo = new THREE.BoxGeometry(bayWidth - 1, height - 0.8, 0.1);
+                    const glassDoor = new THREE.Mesh(glassDoorGeo, glassMat);
+                    glassDoor.position.set(xPos, height / 2 + 0.4, halfD + 0.1);
+                    floorGroup.add(glassDoor);
+                } else if (isCenter) {
+                    // Central Glass Atrium Window Section on Upper Floors
+                    const centerWinGeo = new THREE.BoxGeometry(bayWidth - 0.2, height, 0.2);
+                    const centerWin = new THREE.Mesh(centerWinGeo, glassMat);
+                    centerWin.position.set(xPos, height / 2 + 0.4, halfD);
+                    floorGroup.add(centerWin);
+                } else {
+                    // Regular Facade Bay with Yellow Panel Trim & Windows
+                    // Grey Structural Pillar
+                    const pillarGeo = new THREE.BoxGeometry(0.6, height, 0.5);
+                    const pillar = new THREE.Mesh(pillarGeo, greyMat);
+                    pillar.position.set(xPos - bayWidth / 2, height / 2 + 0.4, halfD);
+                    pillar.castShadow = true;
+                    floorGroup.add(pillar);
+
+                    // Bright Yellow Recessed Window Accent Box (signature look)
+                    const yellowBoxGeo = new THREE.BoxGeometry(bayWidth - 0.8, height * 0.7, 0.4);
+                    const yellowBox = new THREE.Mesh(yellowBoxGeo, yellowMat);
+                    yellowBox.position.set(xPos, height * 0.45 + 0.4, halfD - 0.1);
+                    yellowBox.castShadow = true;
+                    floorGroup.add(yellowBox);
+
+                    // Window Panes set into Yellow Box
+                    const winPaneGeo = new THREE.BoxGeometry(bayWidth - 1.2, height * 0.45, 0.1);
+                    const winPane = new THREE.Mesh(winPaneGeo, glassMat);
+                    winPane.position.set(xPos, height * 0.5 + 0.4, halfD);
+                    floorGroup.add(winPane);
+                }
+            }
+        }
+
+        function createFrontSignage(groundGroup) {
+            // Front Entrance Header Banner with Golden Text
+            const signBgGeo = new THREE.BoxGeometry(18, 1.2, 0.3);
+            const signBgMat = new THREE.MeshStandardMaterial({ color: COLOR_GREY_WALL, roughness: 0.4 });
+            const signBg = new THREE.Mesh(signBgGeo, signBgMat);
+            signBg.position.set(0, 1.2, BUILDING_DEPTH / 2 + 0.25);
+            groundGroup.add(signBg);
+
+            // Create Canvas Texture for precise Department Name Text rendering
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#5a6578';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'Bold 36px Inter, sans-serif';
+            ctx.fillStyle = '#F59E0B'; // Vibrant yellow / gold text
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DEPARTMENT OF CIVIL AND ENVIRONMENTAL ENGINEERING', canvas.width / 2, canvas.height / 2);
+
+            const textTexture = new THREE.CanvasTexture(canvas);
+            const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: false });
+            const textGeo = new THREE.PlaneGeometry(17.6, 1.1);
+            const textMesh = new THREE.Mesh(textGeo, textMat);
+            textMesh.position.set(0, 1.2, BUILDING_DEPTH / 2 + 0.42);
+            groundGroup.add(textMesh);
+        }
+
+        // Create Room Partitions, Interior Furniture, and Interactive Pickable Volumes
+        function buildInteriorsForFloor(floorGroup, floorIndex) {
+            const h = FLOOR_HEIGHT - 0.5;
+            const innerW = BUILDING_WIDTH - 1;
+            const innerD = BUILDING_DEPTH - 1;
+
+            // Interior Central Corridor Wall (divides Left/Right & Front/Back)
+            const corrWallGeo = new THREE.BoxGeometry(innerW, h, WALL_THICKNESS);
+            const corrWallMat = new THREE.MeshStandardMaterial({ color: 0x334155, transparent: true, opacity: 0.6 });
+            const corrWall = new THREE.Mesh(corrWallGeo, corrWallMat);
+            corrWall.position.set(0, h / 2 + 0.4, 0);
+            floorGroup.add(corrWall);
+
+            // Build Specific Rooms per floor index based on specs
+            if (floorIndex === 0) {
+                // GROUND FLOOR LAYOUT:
+                // Middle: Main Lobby & Reception
+                // Left Wing: Survey Instrument Room
+                // Right Wing: Board Meeting Room, Head of Dept Office, Technical Officer (TO) Room
+
+                // Left Wing (-X)
+                createRoomMesh(floorGroup, 'survey_room', -11, 0.4, 0, 14, h, 11, 0x3b82f6);
+                addFurnitureGroup(floorGroup, -11, 0.4, 0, 'lab_tables');
+
+                // Middle Section (0X)
+                createRoomMesh(floorGroup, 'lobby', 0, 0.4, 0, 7, h, 11, 0xf59e0b);
+                addFurnitureGroup(floorGroup, 0, 0.4, 0, 'lobby');
+
+                // Right Wing (+X) - Subdivided into Board Room, Head Room, and TO Room
+                createRoomMesh(floorGroup, 'board_room', 9, 0.4, -3, 11, h, 5, 0x10b981);
+                addFurnitureGroup(floorGroup, 9, 0.4, -3, 'board_table');
+
+                createRoomMesh(floorGroup, 'head_room', 6.5, 0.4, 3, 6, h, 4.5, 0x8b5cf6);
+
+                createRoomMesh(floorGroup, 'to_room', 12.5, 0.4, 3, 5, h, 4.5, 0xec4899);
+
+            } else if (floorIndex === 1) {
+                // FLOOR 1: (Left) Geotechnical Lab, (Right) Concrete Work Lab
+                createRoomMesh(floorGroup, 'geotech_lab', -9, 0.4, 0, 17, h, 11, 0x3b82f6);
+                createRoomMesh(floorGroup, 'concrete_lab', 9, 0.4, 0, 17, h, 11, 0x10b981);
+
+                addFurnitureGroup(floorGroup, -9, 0.4, 0, 'lab_benches');
+                addFurnitureGroup(floorGroup, 9, 0.4, 0, 'heavy_equipment');
+
+            } else if (floorIndex === 2) {
+                // FLOOR 2: (Left) Transportation Lab, (Right) Structural Analysis Lab
+                createRoomMesh(floorGroup, 'trans_lab', -9, 0.4, 0, 17, h, 11, 0xf59e0b);
+                createRoomMesh(floorGroup, 'struct_lab', 9, 0.4, 0, 17, h, 11, 0x8b5cf6);
+
+                addFurnitureGroup(floorGroup, -9, 0.4, 0, 'lab_benches');
+                addFurnitureGroup(floorGroup, 9, 0.4, 0, 'lab_frames');
+
+            } else if (floorIndex === 3) {
+                // FLOOR 3: (Left) Waste Water Lab, (Right) Water Lab
+                createRoomMesh(floorGroup, 'waste_water_lab', -9, 0.4, 0, 17, h, 11, 0x06b6d4);
+                createRoomMesh(floorGroup, 'water_lab', 9, 0.4, 0, 17, h, 11, 0x3b82f6);
+
+                addFurnitureGroup(floorGroup, -9, 0.4, 0, 'lab_benches');
+                addFurnitureGroup(floorGroup, 9, 0.4, 0, 'lab_benches');
+            }
+        }
+
+        // Helper to construct interactive semi-transparent Room Zones
+        function createRoomMesh(parentGroup, key, x, y, z, width, height, depth, colorHex) {
+            const geo = new THREE.BoxGeometry(width, height - 0.2, depth);
+            const mat = new THREE.MeshStandardMaterial({
+                color: colorHex,
+                transparent: true,
+                opacity: 0.25,
+                roughness: 0.3,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y + height / 2, z);
+            mesh.userData = {
+                roomKey: key,
+                info: ROOM_DATA[key],
+                originalColor: colorHex,
+                parentFloor: parentGroup.userData.floorIndex
+            };
+
+            // Wireframe Outline for architectural plan style
+            const edges = new THREE.EdgesGeometry(geo);
+            const lineMat = new THREE.LineBasicMaterial({ color: colorHex, linewidth: 2 });
+            const wireframe = new THREE.LineSegments(edges, lineMat);
+            mesh.add(wireframe);
+
+            parentGroup.add(mesh);
+            roomMeshes.push(mesh);
+        }
+
+        // Representative Modular Furniture Elements
+        function addFurnitureGroup(parentGroup, x, y, z, type) {
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+
+            const matWood = new THREE.MeshStandardMaterial({ color: 0x92400e });
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x475569 });
+
+            if (type === 'board_table') {
+                const tableGeo = new THREE.BoxGeometry(6, 0.8, 2.5);
+                const table = new THREE.Mesh(tableGeo, matWood);
+                table.position.y = 0.8;
+                group.add(table);
+            } else if (type === 'lab_benches' || type === 'lab_tables') {
+                for (let i = -4; i <= 4; i += 4) {
+                    const benchGeo = new THREE.BoxGeometry(2.5, 0.9, 1.2);
+                    const bench = new THREE.Mesh(benchGeo, matMetal);
+                    bench.position.set(i, 0.45, 0);
+                    group.add(bench);
+                }
+            } else if (type === 'heavy_equipment') {
+                const ctmGeo = new THREE.CylinderGeometry(1, 1, 2.2, 8);
+                const ctm = new THREE.Mesh(ctmGeo, matMetal);
+                ctm.position.set(0, 1.1, 0);
+                group.add(ctm);
+            }
+
+            parentGroup.add(group);
+        }
+
+        // Roof Canopy Construction (Overhanging curved roof with steel frame pillars)
+        function buildRoofCanopy() {
+            const roofGroup = new THREE.Group();
+            roofGroup.position.y = 4 * FLOOR_HEIGHT;
+            roofGroup.userData = { floorIndex: 4, baseHeight: 4 * FLOOR_HEIGHT };
+
+            const roofWidth = BUILDING_WIDTH + 3;
+            const roofDepth = BUILDING_DEPTH + 3;
+
+            // Main Slab Canopy
+            const roofSlabGeo = new THREE.BoxGeometry(roofWidth, 0.4, roofDepth);
+            const roofMat = new THREE.MeshStandardMaterial({ color: COLOR_DARK_GREY, roughness: 0.4 });
+            const roofSlab = new THREE.Mesh(roofSlabGeo, roofMat);
+            roofSlab.position.y = 1.2;
+            roofSlab.castShadow = true;
+            roofGroup.add(roofSlab);
+
+            // Triangular Steel Roof Support Trusses matching real photograph
+            const trussMat = new THREE.MeshStandardMaterial({ color: COLOR_YELLOW_ACCENT, metalness: 0.5 });
+            for (let x = -BUILDING_WIDTH / 2 + 2; x <= BUILDING_WIDTH / 2 - 2; x += 6) {
+                const pillarGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 8);
+                const pillarFront = new THREE.Mesh(pillarGeo, trussMat);
+                pillarFront.position.set(x, 0.6, BUILDING_DEPTH / 2);
+                roofGroup.add(pillarFront);
+
+                const pillarBack = new THREE.Mesh(pillarGeo, trussMat);
+                pillarBack.position.set(x, 0.6, -BUILDING_DEPTH / 2);
+                roofGroup.add(pillarBack);
+            }
+
+            scene.add(roofGroup);
+            floorGroups.push(roofGroup);
+        }
+
+        // UI Event Handlers & Interactions
+        function setupEvents() {
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('click', onClick);
+
+            // Floor Selection buttons
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const floorAttr = btn.getAttribute('data-floor');
+                    setFloorFilter(floorAttr);
+
+                    document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+
+            // Camera View Preset buttons
+            document.querySelectorAll('.cam-preset').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = btn.getAttribute('data-preset');
+                    setCameraPreset(preset);
+
+                    document.querySelectorAll('.cam-preset').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+
+            // Explosion Slider
+            const slider = document.getElementById('explode-slider');
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value) / 100;
+                setExplodeFactor(val);
+                document.getElementById('explode-val').innerText = `${Math.round(val * 100)}%`;
+            });
+
+            // Blueprint Theme Toggle
+            document.getElementById('blueprint-toggle').addEventListener('click', () => {
+                blueprintMode = !blueprintMode;
+                document.body.classList.toggle('blueprint-bg', blueprintMode);
+                scene.background = blueprintMode ? new THREE.Color(0x0a192f) : new THREE.Color(0x0b0f19);
+                scene.fog.color = blueprintMode ? new THREE.Color(0x0a192f) : new THREE.Color(0x0b0f19);
+
+                roomMeshes.forEach(mesh => {
+                    mesh.material.opacity = blueprintMode ? 0.45 : 0.25;
+                    mesh.material.wireframe = blueprintMode;
+                });
+            });
+
+            // Camera Reset
+            document.getElementById('reset-cam').addEventListener('click', () => {
+                setCameraPreset('perspective');
+            });
+
+            // Close Info Panel Button
+            document.getElementById('close-info').addEventListener('click', () => {
+                deselectRoom();
+            });
+        }
+
+        function setExplodeFactor(factor) {
+            currentExplodeVal = factor;
+            const maxOffset = 6; // Vertical gap multiplier
+
+            floorGroups.forEach((group, idx) => {
+                const targetY = group.userData.baseHeight + (idx * maxOffset * factor);
+                gsap.to(group.position, {
+                    y: targetY,
+                    duration: 0.6,
+                    ease: "power2.out"
+                });
+            });
+        }
+
+        function setFloorFilter(floorStr) {
+            selectedFloor = floorStr;
+
+            floorGroups.forEach((group, idx) => {
+                if (floorStr === 'all') {
+                    // Show all floors with normal opacity
+                    gsap.to(group.position, {
+                        y: group.userData.baseHeight + (idx * 6 * currentExplodeVal),
+                        duration: 0.5
+                    });
+                    setGroupVisibility(group, true, 1.0);
+                } else {
+                    const targetFloorIdx = parseInt(floorStr);
+                    if (idx === targetFloorIdx) {
+                        // Focus on selected floor
+                        gsap.to(group.position, { y: group.userData.baseHeight, duration: 0.5 });
+                        setGroupVisibility(group, true, 1.0);
+                        
+                        // Move camera target to focus this floor
+                        gsap.to(controls.target, {
+                            y: group.userData.baseHeight + FLOOR_HEIGHT / 2,
+                            duration: 0.8
+                        });
+                    } else if (idx < targetFloorIdx) {
+                        // Floors below stay visible below
+                        gsap.to(group.position, { y: idx * FLOOR_HEIGHT, duration: 0.5 });
+                        setGroupVisibility(group, true, 0.3);
+                    } else {
+                        // Floors above lift up or hide
+                        gsap.to(group.position, { y: idx * FLOOR_HEIGHT + 12, duration: 0.5 });
+                        setGroupVisibility(group, true, 0.15);
+                    }
+                }
+            });
+        }
+
+        function setGroupVisibility(group, visible, opacityTarget) {
+            group.visible = visible;
+            group.traverse(child => {
+                if (child.isMesh && child.material) {
+                    child.material.transparent = true;
+                    gsap.to(child.material, { opacity: opacityTarget * (child.userData.roomKey ? 0.3 : 0.9), duration: 0.4 });
+                }
+            });
+        }
+
+        function setCameraPreset(preset) {
+            let targetPos = { x: 45, y: 30, z: 50 };
+            let targetLook = { x: 0, y: FLOOR_HEIGHT * 2, z: 0 };
+
+            switch (preset) {
+                case 'front':
+                    targetPos = { x: 0, y: FLOOR_HEIGHT * 2, z: 55 };
+                    break;
+                case 'top':
+                    targetPos = { x: 0, y: 70, z: 0.1 };
+                    break;
+                case 'side':
+                    targetPos = { x: 55, y: FLOOR_HEIGHT * 2, z: 0 };
+                    break;
+                case 'perspective':
+                default:
+                    targetPos = { x: 42, y: 32, z: 48 };
+                    break;
+            }
+
+            gsap.to(camera.position, {
+                x: targetPos.x,
+                y: targetPos.y,
+                z: targetPos.z,
+                duration: 1.2,
+                ease: 'power3.inOut'
+            });
+
+            gsap.to(controls.target, {
+                x: targetLook.x,
+                y: targetLook.y,
+                z: targetLook.z,
+                duration: 1.2,
+                ease: 'power3.inOut'
+            });
+        }
+
+        function onPointerMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(roomMeshes);
+
+            if (intersects.length > 0) {
+                const hitMesh = intersects[0].object;
+                if (hoverObject !== hitMesh) {
+                    if (hoverObject && hoverObject !== selectedRoomMesh) {
+                        hoverObject.material.color.setHex(hoverObject.userData.originalColor);
+                    }
+                    hoverObject = hitMesh;
+                    if (hoverObject !== selectedRoomMesh) {
+                        hoverObject.material.color.setHex(COLOR_YELLOW_ACCENT);
+                    }
+                    document.body.style.cursor = 'pointer';
+                }
+            } else {
+                if (hoverObject && hoverObject !== selectedRoomMesh) {
+                    hoverObject.material.color.setHex(hoverObject.userData.originalColor);
+                }
+                hoverObject = null;
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onClick() {
+            if (hoverObject) {
+                selectRoom(hoverObject);
+            }
+        }
+
+        function selectRoom(mesh) {
+            if (selectedRoomMesh) {
+                selectedRoomMesh.material.color.setHex(selectedRoomMesh.userData.originalColor);
+            }
+
+            selectedRoomMesh = mesh;
+            selectedRoomMesh.material.color.setHex(0xf59e0b); // Highlight yellow/gold
+
+            const info = mesh.userData.info;
+            if (info) {
+                updateInfoPanel(info);
+            }
+        }
+
+        function deselectRoom() {
+            if (selectedRoomMesh) {
+                selectedRoomMesh.material.color.setHex(selectedRoomMesh.userData.originalColor);
+                selectedRoomMesh = null;
+            }
+            document.getElementById('info-title').innerText = "Select a Room";
+            document.getElementById('info-desc').innerText = "Click on any room partition inside the 3D cutaway to view detailed lab specs.";
+        }
+
+        function updateInfoPanel(info) {
+            document.getElementById('info-floor-badge').innerText = info.floor;
+            document.getElementById('info-title').innerHTML = `<i class="fa-solid ${info.icon} text-amber-400"></i> ${info.name}`;
+            document.getElementById('info-desc').innerText = info.desc;
+            document.getElementById('info-equipment').innerText = info.equipment;
+            document.getElementById('info-focus').innerText = info.focus;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+
+            // Gentle hover animation for selected room
+            if (selectedRoomMesh) {
+                selectedRoomMesh.material.opacity = 0.45 + Math.sin(Date.now() * 0.005) * 0.1;
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
