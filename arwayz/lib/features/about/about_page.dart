@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../admin/admin_dashboard_page.dart';
+import '../admin/admin_login_page.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -335,7 +335,7 @@ class AboutPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AdminDashboardPage(),
+                    builder: (context) => const AdminLoginPage(),
                   ),
                 );
               },

@@ -37,22 +37,6 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        // Sign debug builds with the keystore committed at android/debug.keystore
-        // instead of each developer's own ~/.android/debug.keystore.
-        //
-        // Firebase restricts the Android API key by package name + SHA-1, so
-        // without this every new machine produces a different fingerprint and
-        // Firebase Auth and Google Maps are both rejected. One shared keystore
-        // means one registered fingerprint works for everyone.
-        getByName("debug") {
-            storeFile = file("../debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
-
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

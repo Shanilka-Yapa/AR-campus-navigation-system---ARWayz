@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../events/admin/admin_auth_service.dart';
-import '../events/admin/admin_comments_tab.dart';
-import '../events/admin/admin_events_tab.dart';
-import '../events/admin/admin_gate.dart';
-import '../events/admin/admin_students_tab.dart';
-
 // Color palette
 const Color kPrimaryDark = Color(0xFF1A2D33); // Primary Dark
 const Color kDeepTeal = Color(0xFF235559); // Deep Teal
@@ -20,94 +14,42 @@ class AdminDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Every section writes to Firestore, and the rules require a signed-in
-    // administrator, so the whole portal sits behind the Firebase gate.
-    return AdminGate(
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: kPrimaryDark,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
-            'Admin Dashboard',
-            style: TextStyle(color: Colors.white),
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'Sign out',
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: () => AdminAuthService().signOut(),
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _AdminMenuCard(
-              icon: Icons.domain,
-              title: 'Manage Buildings',
-              subtitle: 'Add, edit, or delete campus buildings',
-              page: const ManageBuildingsPage(),
-            ),
-            _AdminMenuCard(
-              icon: Icons.event,
-              title: 'Manage Events',
-              subtitle: 'Create, edit, reorder, hide, or delete campus events',
-              page: const AdminEventsTab(),
-            ),
-            _AdminMenuCard(
-              icon: Icons.people_alt,
-              title: 'Manage Students',
-              subtitle: 'Review registrations, approve, block, or unblock',
-              page: const AdminStudentsTab(),
-            ),
-            _AdminMenuCard(
-              icon: Icons.forum,
-              title: 'Manage Comments',
-              subtitle: 'Moderate comments and block their authors',
-              page: const AdminCommentsTab(),
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: kPrimaryDark,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(color: Colors.white),
         ),
       ),
-    );
-  }
-}
-
-/// One row of the admin menu, matching the Manage Buildings card.
-class _AdminMenuCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget page;
-
-  const _AdminMenuCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.page,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: kMutedTeal,
-          child: Icon(icon, color: Colors.white),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right, color: kDeepTeal),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        },
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: kMutedTeal,
+                child: Icon(Icons.domain, color: Colors.white),
+              ),
+              title: const Text(
+                'Manage Buildings',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text('Add, edit, or delete campus buildings'),
+              trailing: const Icon(Icons.chevron_right, color: kDeepTeal),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ManageBuildingsPage(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
