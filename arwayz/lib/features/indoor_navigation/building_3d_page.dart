@@ -194,7 +194,7 @@ class _IsBuilding3DPage extends StatelessWidget {
           IconButton(
             onPressed: () => _openWayfinder(context),
             icon: const Icon(Icons.qr_code_scanner_rounded),
-            tooltip: 'Scan indoor QR',
+            tooltip: 'If you are inside the IS Building, select your destination and scan the nearest floor QR to get support',
           ),
         ],
       ),
