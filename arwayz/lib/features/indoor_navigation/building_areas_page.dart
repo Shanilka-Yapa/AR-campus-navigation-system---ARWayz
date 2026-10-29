@@ -16,7 +16,8 @@ class BuildingAreasPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = departmentConfig ??
+    final config =
+        departmentConfig ??
         (buildingId == 'CIVIL_BUILDING'
             ? civilDepartmentConfig
             : isDepartmentConfig);
@@ -45,14 +46,18 @@ class BuildingAreasPage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.25),
+                              color: Colors.white.withValues(alpha: 0.25),
                               width: 1.5,
                             ),
                           ),
-                          child: Icon(config.icon, color: Colors.white, size: 36),
+                          child: Icon(
+                            config.icon,
+                            color: Colors.white,
+                            size: 36,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -93,10 +98,10 @@ class BuildingAreasPage extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.25),
+                            color: Colors.white.withValues(alpha: 0.25),
                           ),
                         ),
                         child: const Icon(
@@ -118,8 +123,10 @@ class BuildingAreasPage extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (hasDivisions) ...[
-                  const Text(
-                    'FACULTY DIVISIONS & SECTIONS',
+                  Text(
+                    config.id == 'CIVIL_BUILDING'
+                        ? 'ROOMS & LABORATORIES'
+                        : 'FACULTY DIVISIONS & SECTIONS',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF7B929C),
@@ -144,10 +151,26 @@ class BuildingAreasPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildGenericAreaCard('Central Reception & Lobby', Icons.meeting_room_rounded, 'Ground Floor - Main Lobby'),
-                  _buildGenericAreaCard('New Computer Center', Icons.computer_rounded, 'Third Floor - Right Wing'),
-                  _buildGenericAreaCard("Dean's Office Suite", Icons.admin_panel_settings_rounded, 'First Floor - Center Wing'),
-                  _buildGenericAreaCard('IS Seminar Room', Icons.co_present_rounded, 'Second Floor - Left Wing'),
+                  _buildGenericAreaCard(
+                    'Central Reception & Lobby',
+                    Icons.meeting_room_rounded,
+                    'Ground Floor - Main Lobby',
+                  ),
+                  _buildGenericAreaCard(
+                    'New Computer Center',
+                    Icons.computer_rounded,
+                    'Third Floor - Right Wing',
+                  ),
+                  _buildGenericAreaCard(
+                    "Dean's Office Suite",
+                    Icons.admin_panel_settings_rounded,
+                    'First Floor - Center Wing',
+                  ),
+                  _buildGenericAreaCard(
+                    'IS Seminar Room',
+                    Icons.co_present_rounded,
+                    'Second Floor - Left Wing',
+                  ),
                 ],
                 const SizedBox(height: 24),
               ]),
@@ -166,12 +189,12 @@ class BuildingAreasPage extends StatelessWidget {
         color: division.cardBgColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: division.primaryColor.withOpacity(0.2),
+          color: division.primaryColor.withValues(alpha: 0.2),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: division.primaryColor.withOpacity(0.08),
+            color: division.primaryColor.withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 5),
           ),
@@ -198,7 +221,7 @@ class BuildingAreasPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: division.primaryColor.withOpacity(0.3),
+                            color: division.primaryColor.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -220,7 +243,9 @@ class BuildingAreasPage extends StatelessWidget {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: division.primaryColor.withOpacity(0.12),
+                                  color: division.primaryColor.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -240,7 +265,9 @@ class BuildingAreasPage extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 11.5,
-                                    color: division.primaryColor.withOpacity(0.7),
+                                    color: division.primaryColor.withValues(
+                                      alpha: 0.7,
+                                    ),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -269,7 +296,7 @@ class BuildingAreasPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    color: division.primaryColor.withOpacity(0.85),
+                    color: division.primaryColor.withValues(alpha: 0.85),
                     height: 1.4,
                   ),
                 ),
@@ -278,7 +305,7 @@ class BuildingAreasPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${division.keyFacilities.length} Core Labs & Facilities',
+                      '${division.keyFacilities.length} Facilities',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -320,17 +347,13 @@ class BuildingAreasPage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: primaryDark.withOpacity(0.1),
+          backgroundColor: primaryDark.withValues(alpha: 0.1),
           child: Icon(icon, color: primaryDark),
         ),
         title: Text(
@@ -398,7 +421,7 @@ class BuildingAreasPage extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: division.primaryColor.withOpacity(0.12),
+                            color: division.primaryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -486,7 +509,9 @@ class BuildingAreasPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: division.cardBgColor,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: division.primaryColor.withOpacity(0.2)),
+                  border: Border.all(
+                    color: division.primaryColor.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   children: [

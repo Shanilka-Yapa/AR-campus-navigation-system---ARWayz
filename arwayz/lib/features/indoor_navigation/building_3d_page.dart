@@ -37,9 +37,9 @@ class _Building3DPageState extends State<Building3DPage> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.12),
+            color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
           child: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -53,7 +53,7 @@ class _Building3DPageState extends State<Building3DPage> {
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
-            'Choose a department building',
+            'Choose a Department Building',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
@@ -225,6 +225,7 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
   Widget build(BuildContext context) {
     final config = widget.config;
     final divisions = config.divisions;
+    final showDivisionOverlay = config.id != 'CIVIL_BUILDING';
 
     return Scaffold(
       appBar: AppBar(
@@ -242,9 +243,9 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
           ),
           child: IconButton(
             icon: const Icon(
@@ -261,9 +262,9 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.25)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: IconButton(
               onPressed: () => _openDepartmentAreas(context),
@@ -279,9 +280,9 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
           Container(
             margin: const EdgeInsets.only(left: 4, right: 12, top: 8, bottom: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.25)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: IconButton(
               onPressed: () => _openWayfinder(context),
@@ -298,10 +299,14 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
       body: Stack(
         children: [
           // 3D Canvas
-          const Building3DView(),
+          Building3DView(
+            assetPath: config.id == 'CIVIL_BUILDING'
+                ? 'assets/civil 3d view.html'
+                : 'assets/index.html',
+          ),
 
           // Interactive Tap Raycast Division Overlay Markers
-          if (divisions.isNotEmpty)
+          if (showDivisionOverlay && divisions.isNotEmpty)
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
@@ -339,7 +344,7 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: division.primaryColor.withOpacity(0.35),
+                                color: division.primaryColor.withValues(alpha: 0.35),
                                 blurRadius: isSelected ? 12 : 6,
                                 offset: const Offset(0, 3),
                               ),
@@ -377,7 +382,7 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
             ),
 
           // Selected Division Bottom Mini Preview Card
-          if (_selectedDivision != null)
+          if (showDivisionOverlay && _selectedDivision != null)
             Positioned(
               bottom: 20,
               left: 16,
@@ -389,11 +394,11 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
                   color: _selectedDivision!.cardBgColor,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: _selectedDivision!.primaryColor.withOpacity(0.3),
+                    color: _selectedDivision!.primaryColor.withValues(alpha: 0.3),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -444,7 +449,7 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _selectedDivision!.primaryColor.withOpacity(0.8),
+                        color: _selectedDivision!.primaryColor.withValues(alpha: 0.8),
                       ),
                     ),
                   ],

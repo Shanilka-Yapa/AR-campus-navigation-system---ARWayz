@@ -43,6 +43,7 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
     _FloorLocation('floor_0', 'Ground-floor QR location', 0),
     _FloorLocation('floor_1', 'First-floor QR location', 1),
     _FloorLocation('floor_2', 'Second-floor QR location', 2),
+    _FloorLocation('floor_3', 'Third-floor QR location', 3),
   ];
 
   static const _isDestinations = <_BuildingDestination>[
@@ -112,17 +113,15 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
     if (payload == null) return;
 
     if (payload.buildingId != _config.id) {
-      setState(
-        () => _message = 'This QR code is not for the ${_config.name}.',
-      );
+      setState(() => _message = 'This QR code is not for the ${_config.name}.');
       return;
     }
 
     final location = _findLocation(payload);
     if (location == null) {
       setState(
-        () => _message =
-            'This is not one of the ${_config.name} floor QR codes.',
+        () =>
+            _message = 'This is not one of the ${_config.name} floor QR codes.',
       );
       return;
     }
@@ -158,9 +157,9 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
           ),
           child: IconButton(
             icon: const Icon(
@@ -176,7 +175,11 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Icon(Icons.location_searching_rounded, size: 56, color: _config.themeColor),
+          Icon(
+            Icons.location_searching_rounded,
+            size: 56,
+            color: _config.themeColor,
+          ),
           const SizedBox(height: 12),
           Text(
             'Find your way inside ${_config.name}',
@@ -201,14 +204,16 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
             ),
             isExpanded: true,
             items: _destinations
-                .map((destination) => DropdownMenuItem<_BuildingDestination>(
-                      value: destination,
-                      child: Text(
-                        destination.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ))
+                .map(
+                  (destination) => DropdownMenuItem<_BuildingDestination>(
+                    value: destination,
+                    child: Text(
+                      destination.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                )
                 .toList(),
             onChanged: (value) {
               setState(() {
@@ -226,7 +231,9 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
                   ? null
                   : _scanLocation,
               icon: const Icon(Icons.qr_code_scanner_rounded),
-              label: Text(_isScanning ? 'Opening scanner...' : 'Scan QR Location'),
+              label: Text(
+                _isScanning ? 'Opening scanner...' : 'Scan QR Location',
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _config.themeColor,
                 foregroundColor: Colors.white,
@@ -271,7 +278,10 @@ class _IndoorWayfinderPageState extends State<IndoorWayfinderPage> {
                     ),
                     Text(
                       '${_config.name} • ${_currentLocation!.floor == 0 ? 'Ground' : '${_currentLocation!.floor}'} floor',
-                      style: TextStyle(color: Colors.grey.shade800, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.grey.shade800,
+                        fontSize: 13,
+                      ),
                     ),
                     const Divider(height: 24),
                     const Text(
@@ -308,9 +318,7 @@ class _MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       color: Colors.orange.shade50,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Text(message, style: TextStyle(color: Colors.orange.shade900)),
