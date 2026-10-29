@@ -9,14 +9,60 @@ const Color kMutedTeal = Color(0xFF3F727A); // Muted Teal
 const Color kSteelBlue = Color(0xFF7B929C); // Steel Blue
 const Color kLightGray = Color(0xFFBEC4C4); // Light Gray
 
-class AdminDashboardPage extends StatefulWidget {
+class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
   @override
-  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: kPrimaryDark,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: kMutedTeal,
+                child: Icon(Icons.domain, color: Colors.white),
+              ),
+              title: const Text(
+                'Manage Buildings',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text('Add, edit, or delete campus buildings'),
+              trailing: const Icon(Icons.chevron_right, color: kDeepTeal),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ManageBuildingsPage(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _AdminDashboardPageState extends State<AdminDashboardPage> {
+class ManageBuildingsPage extends StatefulWidget {
+  const ManageBuildingsPage({super.key});
+
+  @override
+  State<ManageBuildingsPage> createState() => _ManageBuildingsPageState();
+}
+
+class _ManageBuildingsPageState extends State<ManageBuildingsPage> {
   Map<String, dynamic>? _lastDeletedData;
   String? _lastDeletedDocId;
   Timer? _undoTimer;
@@ -43,7 +89,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_lastDeletedData!['name'] ?? 'Destination'} restored.'),
+            content: Text(
+              '${_lastDeletedData!['name'] ?? 'Destination'} restored.',
+            ),
             backgroundColor: kDeepTeal,
             duration: const Duration(seconds: 2),
           ),
@@ -353,9 +401,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     onPressed: () async {
                       if (pwCtrl.text == pw) {
                         setState(() => isDeleting = true);
-                          try {
+                        try {
                           // save deleted document data so it can be restored if UNDO is pressed
-                          _lastDeletedData = doc.data() as Map<String, dynamic>? ?? {};
+                          _lastDeletedData =
+                              doc.data() as Map<String, dynamic>? ?? {};
                           _lastDeletedDocId = doc.id;
 
                           await doc.reference.delete();
@@ -385,12 +434,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   ValueListenableBuilder<int>(
                                     valueListenable: _undoRemaining,
                                     builder: (context, value, _) {
-                                      final progress = (value / 5).clamp(0.0, 1.0);
+                                      final progress = (value / 5).clamp(
+                                        0.0,
+                                        1.0,
+                                      );
                                       return Row(
                                         children: [
                                           Text(
                                             '$value',
-                                            style: const TextStyle(color: Colors.white),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           SizedBox(
@@ -428,18 +482,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           );
 
                           // countdown timer updates the ValueNotifier (no snackbar recreation)
-                          _undoTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-                            final next = _undoRemaining.value - 1;
-                            _undoRemaining.value = next;
-                            if (next <= 0) {
-                              t.cancel();
-                              _lastDeletedData = null;
-                              _lastDeletedDocId = null;
-                              try {
-                                ScaffoldMessenger.of(mainContext).hideCurrentSnackBar();
-                              } catch (_) {}
-                            }
-                          });
+                          _undoTimer = Timer.periodic(
+                            const Duration(seconds: 1),
+                            (t) {
+                              final next = _undoRemaining.value - 1;
+                              _undoRemaining.value = next;
+                              if (next <= 0) {
+                                t.cancel();
+                                _lastDeletedData = null;
+                                _lastDeletedDocId = null;
+                                try {
+                                  ScaffoldMessenger.of(
+                                    mainContext,
+                                  ).hideCurrentSnackBar();
+                                } catch (_) {}
+                              }
+                            },
+                          );
                         } catch (e) {
                           Navigator.pop(dialogContext);
                           ScaffoldMessenger.of(mainContext).showSnackBar(
@@ -481,7 +540,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          "Admin Dashboard",
+          'Manage Buildings',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -550,7 +609,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   desc,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: kLightGray.withValues(alpha: 0.9),
+                                    color: kLightGray.withOpacity(0.9),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -568,9 +627,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: kMutedTeal.withValues(alpha: 0.08),
+                          color: kMutedTeal.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: kMutedTeal.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: kMutedTeal.withOpacity(0.3),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

@@ -15,162 +15,181 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: scaffoldBg,
-      body: CustomScrollView(
-        slivers: [
-          // Centered Header
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
-              decoration: const BoxDecoration(
-                color: primaryDark,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline_rounded, color: Colors.white, size: 28),
-                      SizedBox(width: 10),
-                      Text(
-                        'About ARWayz',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Campus AR Navigation & Project Info',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFFBEC4C4),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Centered Header
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
+                  decoration: const BoxDecoration(
+                    color: primaryDark,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // Body Content
-          SliverPadding(
-            padding: const EdgeInsets.all(20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // About App Card
-                _buildCard(
-                  title: 'About The App',
-                  icon: Icons.alt_route_rounded,
-                  accentColor: mutedTeal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'ARWayz is an intelligent AR Campus Navigation System developed specifically for the Faculty of Engineering, University of Ruhuna.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: primaryDark,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'About ARWayz',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Vision & Motivation:',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: deepTeal,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Navigating a large university campus with multiple department buildings and floors can be challenging for freshers, visitors, and guests. ARWayz combines real-time AR compass directions, 3D interactive indoor floorplans, and location QR scanning to make campus exploration effortless.',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          height: 1.5,
-                          color: primaryDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Supervisors & Mentors Section
-                _buildCard(
-                  title: 'Supervisors & Mentors',
-                  icon: Icons.school_rounded,
-                  accentColor: goldAccent,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSupervisorTile(
-                        name: 'Dr. Prabath Weerasinghe',
-                        roleTag: 'Client',
-                        description:
-                            'Senior Lecturer, Faculty of Engineering, University of Ruhuna | B.Sc., M.Sc., Eng., Ph.D.',
-                      ),
-                      const SizedBox(height: 14),
-                      const Divider(height: 1, color: Color(0xFFECEFF1)),
-                      const SizedBox(height: 14),
-                      _buildSupervisorTile(
-                        name: 'Mr. Thiwanka Silva',
-                        roleTag: 'Mentor',
-                        description:
-                            'Visiting Lecturer, Faculty of Engineering, University of Ruhuna | Software Engineer, Enactor Ltd',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Undergraduate Project Members Section
-                _buildCard(
-                  title: 'Undergraduate Project Members',
-                  icon: Icons.groups_rounded,
-                  accentColor: deepTeal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Department of Computer Engineering',
+                      SizedBox(height: 6),
+                      Text(
+                        'Campus AR Navigation & Project Info',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 13,
-                          color: steelBlue,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFFBEC4C4),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      const Divider(height: 1, color: Color(0xFFECEFF1)),
-                      const SizedBox(height: 12),
-                      _buildProjectMemberTile('EG/2022/5332', 'Bipuli Yovinma W.K.'),
-                      const SizedBox(height: 10),
-                      _buildProjectMemberTile('EG/2022/5435', 'Shanilka T. Yapa'),
-                      const SizedBox(height: 10),
-                      _buildProjectMemberTile('EG/2022/4933', 'Ambalangodage H.U.'),
-                      const SizedBox(height: 10),
-                      _buildProjectMemberTile('EG/2022/5136', 'Kavindi S.H.V'),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+              ),
 
-                // Admin Access Section
-                _buildAdminAccessCard(context),
-                const SizedBox(height: 24),
-              ]),
-            ),
+              // Body Content
+              SliverPadding(
+                padding: const EdgeInsets.all(20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // About App Card
+                    _buildCard(
+                      title: 'About The App',
+                      icon: Icons.alt_route_rounded,
+                      accentColor: mutedTeal,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'ARWayz is an intelligent AR Campus Navigation System developed specifically for the Faculty of Engineering, University of Ruhuna.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: primaryDark,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Vision & Motivation:',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: deepTeal,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Navigating a large university campus with multiple department buildings and floors can be challenging for freshers, visitors, and guests. ARWayz combines real-time AR compass directions, 3D interactive indoor floorplans, and location QR scanning to make campus exploration effortless.',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              height: 1.5,
+                              color: primaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Supervisors & Mentors Section
+                    _buildCard(
+                      title: 'Supervisors & Mentors',
+                      icon: Icons.school_rounded,
+                      accentColor: goldAccent,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSupervisorTile(
+                            name: 'Dr. Prabath Weerasinghe',
+                            roleTag: 'Client',
+                            description:
+                                'Senior Lecturer, Faculty of Engineering, University of Ruhuna | B.Sc., M.Sc., Eng., Ph.D.',
+                          ),
+                          const SizedBox(height: 14),
+                          const Divider(height: 1, color: Color(0xFFECEFF1)),
+                          const SizedBox(height: 14),
+                          _buildSupervisorTile(
+                            name: 'Mr. Thiwanka Silva',
+                            roleTag: 'Mentor',
+                            description:
+                                'Visiting Lecturer, Faculty of Engineering, University of Ruhuna | Software Engineer, Enactor Ltd',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Undergraduate Project Members Section
+                    _buildCard(
+                      title: 'Undergraduate Project Members',
+                      icon: Icons.groups_rounded,
+                      accentColor: deepTeal,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Department of Computer Engineering',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: steelBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          const Divider(height: 1, color: Color(0xFFECEFF1)),
+                          const SizedBox(height: 12),
+                          _buildProjectMemberTile(
+                            'EG/2022/5382',
+                            'Bipuli Yovinma W.K.',
+                          ),
+                          const SizedBox(height: 10),
+                          _buildProjectMemberTile(
+                            'EG/2022/5435',
+                            'Shanilka T. Yapa',
+                          ),
+                          const SizedBox(height: 10),
+                          _buildProjectMemberTile(
+                            'EG/2022/4933',
+                            'Ambalangodage H.U.',
+                          ),
+                          const SizedBox(height: 10),
+                          _buildProjectMemberTile(
+                            'EG/2022/5136',
+                            'Kavindi S.H.V',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    const SizedBox(height: 24),
+                  ]),
+                ),
+              ),
+            ],
           ),
+          _buildAdminAccessButton(context),
         ],
       ),
     );
@@ -188,7 +207,7 @@ class AboutPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryDark.withValues(alpha: 0.06),
+            color: primaryDark.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -245,9 +264,9 @@ class AboutPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: goldAccent.withValues(alpha: 0.12),
+                color: goldAccent.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: goldAccent.withValues(alpha: 0.3)),
+                border: Border.all(color: goldAccent.withOpacity(0.3)),
               ),
               child: Text(
                 roleTag,
@@ -263,11 +282,7 @@ class AboutPage extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           description,
-          style: const TextStyle(
-            fontSize: 13,
-            color: steelBlue,
-            height: 1.4,
-          ),
+          style: const TextStyle(fontSize: 13, color: steelBlue, height: 1.4),
         ),
       ],
     );
@@ -306,46 +321,16 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAdminAccessCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: primaryDark,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.admin_panel_settings_rounded, color: goldAccent, size: 24),
-              SizedBox(width: 10),
-              Text(
-                'Administrator Access',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Manage campus destinations, AR markers, indoor nodes, and campus events.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.75),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
+  Widget _buildAdminAccessButton(BuildContext context) {
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 10, bottom: 10),
+          child: Semantics(
+            button: true,
+            label: 'Admin access',
+            child: IconButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -354,19 +339,15 @@ class AboutPage extends StatelessWidget {
                   ),
                 );
               },
-              icon: const Icon(Icons.lock_open_rounded, size: 18),
-              label: const Text('Admin Portal Login'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: goldAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              icon: const Icon(Icons.lock_outline_rounded),
+              iconSize: 18,
+              color: primaryDark.withValues(alpha: 0.45),
+              splashRadius: 22,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              padding: EdgeInsets.zero,
             ),
           ),
-        ],
+        ),
       ),
     );
   }
