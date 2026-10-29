@@ -81,7 +81,7 @@ class AboutPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'ARWayz is an intelligent AR Campus Navigation System developed specifically for the Faculty of Engineering, University of Ruhuna.',
+                            'ARWayz is an AR Campus Navigation System developed specifically for the Faculty of Engineering, University of Ruhuna.',
                             style: TextStyle(
                               fontSize: 14,
                               height: 1.5,

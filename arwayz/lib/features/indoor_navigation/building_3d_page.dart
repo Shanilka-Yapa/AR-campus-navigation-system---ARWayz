@@ -291,7 +291,7 @@ class _DepartmentBuilding3DPageState extends State<DepartmentBuilding3DPage> {
                 color: Colors.white,
                 size: 20,
               ),
-              tooltip: 'Scan indoor QR',
+              tooltip: 'If you are currently inside the building and want to navigate to a specific area, tap here to select destination and scan the floor QR code to get directions.',
             ),
           ),
         ],

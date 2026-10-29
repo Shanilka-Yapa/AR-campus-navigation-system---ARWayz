@@ -158,7 +158,7 @@ class WelcomePage extends StatelessWidget {
                           child: SingleChildScrollView(
                             physics: const BouncingScrollPhysics(),
                             child: Text(
-                              'Welcome to the premier engineering institution in Southern Sri Lanka, located in Hapugala, Galle. Home to five major academic departments—Interdisciplinary Studies, Electrical & Information Engineering, Mechanical & Manufacturing Engineering, Civil & Environmental Engineering—and advanced research facilities. ARWayz provides seamless Augmented Reality navigation across our state-of-the-art department complexes, laboratories, and campus facilities.',
+                              'Welcome to the premier engineering institution in Southern Sri Lanka, located in Hapugala, Galle. Home to five major academic departments—Interdisciplinary Studies, Electrical & Information Engineering, Mechanical & Manufacturing Engineering, Civil & Environmental Engineering—and advanced research facilities.ARWayz is a smart campus navigation system that combines GPS-based outdoor navigation, AR compass guidance, and QR code-based indoor wayfinding. It helps students and visitors locate university buildings, explore interactive 3D floor plans, and navigate campus facilities with ease.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13.5,

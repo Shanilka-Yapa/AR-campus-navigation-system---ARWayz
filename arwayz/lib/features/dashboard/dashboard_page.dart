@@ -279,18 +279,18 @@ class _DashboardHomeContentView extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                // const SizedBox(height: 16),
 
-                // Full-width Scan QR Location Card
-                _buildActionBannerCard(
-                  context,
-                  title: 'Scan QR Location',
-                  icon: Icons.qr_code_scanner_rounded,
-                  bgColor: const Color(0xFFF2EFFD),
-                  iconColor: const Color(0xFF6B4EE0),
-                  textColor: const Color(0xFF1A2D33),
-                  onTap: () => _openCamera(context),
-                ),
+                // // Full-width Scan QR Location Card
+                // _buildActionBannerCard(
+                //   context,
+                //   title: 'Scan QR Location',
+                //   icon: Icons.qr_code_scanner_rounded,
+                //   bgColor: const Color(0xFFF2EFFD),
+                //   iconColor: const Color(0xFF6B4EE0),
+                //   textColor: const Color(0xFF1A2D33),
+                //   onTap: () => _openCamera(context),
+                // ),
 
                 const SizedBox(height: 32),
 
