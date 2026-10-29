@@ -188,7 +188,7 @@ class AboutPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryDark.withOpacity(0.06),
+            color: primaryDark.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -245,9 +245,9 @@ class AboutPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: goldAccent.withOpacity(0.12),
+                color: goldAccent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: goldAccent.withOpacity(0.3)),
+                border: Border.all(color: goldAccent.withValues(alpha: 0.3)),
               ),
               child: Text(
                 roleTag,
@@ -338,7 +338,7 @@ class AboutPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),

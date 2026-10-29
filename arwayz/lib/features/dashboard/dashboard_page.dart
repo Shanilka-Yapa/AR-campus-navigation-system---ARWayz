@@ -39,7 +39,7 @@ class _DashboardPageState extends State<DashboardPage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF1A2D33).withOpacity(0.08),
+              color: const Color(0xFF1A2D33).withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, -3),
             ),
@@ -137,10 +137,10 @@ class _DashboardHomeContentView extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.25),
+                              color: Colors.white.withValues(alpha: 0.25),
                               width: 1.5,
                             ),
                           ),
@@ -190,10 +190,10 @@ class _DashboardHomeContentView extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
@@ -355,7 +355,7 @@ class _DashboardHomeContentView extends StatelessWidget {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: textColor.withOpacity(0.4),
+                  color: textColor.withValues(alpha: 0.4),
                   size: 24,
                 ),
               ],
@@ -416,7 +416,7 @@ class _DashboardHomeContentView extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: textColor.withOpacity(0.4),
+              color: textColor.withValues(alpha: 0.4),
               size: 26,
             ),
           ],
@@ -434,7 +434,7 @@ class _DashboardHomeContentView extends StatelessWidget {
         color: const Color(0xFFEBF3FA),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: const Color(0xFF2A72D0).withOpacity(0.15),
+          color: const Color(0xFF2A72D0).withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -450,7 +450,7 @@ class _DashboardHomeContentView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2A72D0).withOpacity(0.12),
+                      color: const Color(0xFF2A72D0).withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),

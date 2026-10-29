@@ -550,7 +550,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   desc,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: kLightGray.withOpacity(0.9),
+                                    color: kLightGray.withValues(alpha: 0.9),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -568,9 +568,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: kMutedTeal.withOpacity(0.08),
+                          color: kMutedTeal.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: kMutedTeal.withOpacity(0.3)),
+                          border: Border.all(color: kMutedTeal.withValues(alpha: 0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

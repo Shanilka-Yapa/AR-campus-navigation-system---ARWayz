@@ -134,7 +134,7 @@ class _QRScannerPageState extends State<QRScannerPage>
               child: IgnorePointer(
                 child: CustomPaint(
                   painter: _ScannerMaskPainter(
-                    color: Colors.black.withOpacity(0.66),
+                    color: Colors.black.withValues(alpha: 0.66),
                     targetSize: 260,
                     targetCenterFactor: 0.48,
                   ),
@@ -277,7 +277,7 @@ class _QRScannerPageState extends State<QRScannerPage>
   }) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.48),
+        color: Colors.black.withValues(alpha: 0.48),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -300,12 +300,12 @@ class _QRScannerPageState extends State<QRScannerPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.38),
+        color: Colors.black.withValues(alpha: 0.38),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.22),
+            color: Colors.black.withValues(alpha: 0.22),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -340,7 +340,7 @@ class _QRScannerPageState extends State<QRScannerPage>
     bool active = false,
   }) {
     return Material(
-      color: active ? _accentTeal.withOpacity(0.25) : Colors.transparent,
+      color: active ? _accentTeal.withValues(alpha: 0.25) : Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onPressed,
@@ -374,9 +374,9 @@ class _QRScannerPageState extends State<QRScannerPage>
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: IconButton(
         onPressed: onPressed,
@@ -411,7 +411,7 @@ class _QRScannerPageState extends State<QRScannerPage>
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: accent.withOpacity(0.12),
+                  backgroundColor: accent.withValues(alpha: 0.12),
                   child: Icon(
                     isPayload ? Icons.location_on_rounded : Icons.link_rounded,
                     color: accent,
@@ -592,7 +592,7 @@ class _ScanFramePainter extends CustomPainter {
     final laserPaint = Paint()
       ..strokeWidth = 2.5
       ..shader = LinearGradient(
-        colors: [color.withOpacity(0), color, color.withOpacity(0)],
+        colors: [color.withValues(alpha: 0), color, color.withValues(alpha: 0)],
       ).createShader(Rect.fromLTWH(0, laserY, size.width, 1));
     canvas.drawLine(
       Offset(18, laserY),

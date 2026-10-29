@@ -81,12 +81,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             Positioned(
               top: -50,
               right: -50,
-              child: CircleAvatar(radius: 100, backgroundColor: colorMutedTeal.withOpacity(0.2)),
+              child: CircleAvatar(radius: 100, backgroundColor: colorMutedTeal.withValues(alpha: 0.2)),
             ),
             Positioned(
               bottom: -30,
               left: -30,
-              child: CircleAvatar(radius: 80, backgroundColor: colorSteelBlue.withOpacity(0.1)),
+              child: CircleAvatar(radius: 80, backgroundColor: colorSteelBlue.withValues(alpha: 0.1)),
             ),
 
             // Top Modern Back Button
@@ -101,10 +101,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                         ),
                       ),
                       child: const Icon(
@@ -127,9 +127,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
-                        border: Border.all(color: colorSteelBlue.withOpacity(0.3)),
+                        border: Border.all(color: colorSteelBlue.withValues(alpha: 0.3)),
                       ),
                       child: Icon(Icons.admin_panel_settings_rounded, size: 70, color: colorLightGray),
                     ),
@@ -154,12 +154,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           )
@@ -210,7 +210,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     const SizedBox(height: 30),
                     Text(
                       "© 2024 ARWayz Secure Systems",
-                      style: TextStyle(color: colorSteelBlue.withOpacity(0.5), fontSize: 12),
+                      style: TextStyle(color: colorSteelBlue.withValues(alpha: 0.5), fontSize: 12),
                     ),
                   ],
                 ),
@@ -237,10 +237,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         labelStyle: TextStyle(color: colorSteelBlue),
         prefixIcon: Icon(icon, color: colorMutedTeal),
         filled: true,
-        fillColor: colorDark.withOpacity(0.3),
+        fillColor: colorDark.withValues(alpha: 0.3),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
