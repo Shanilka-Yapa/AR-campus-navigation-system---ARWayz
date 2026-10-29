@@ -6,7 +6,7 @@ import '../features/welcome/welcome_page.dart';
 import '../features/dashboard/dashboard_page.dart';
 import '../features/destinations/navigation_selector_page.dart';
 import '../features/outdoor_navigation/outdoor_navigation_page.dart';
-import '../features/admin/admin_login_page.dart';
+import '../features/admin/admin_dashboard_page.dart';
 import '../features/events/events_page.dart';
 import '../features/indoor_navigation/indoor_navigation_page.dart';
 import '../core/models/qr_payload.dart';
@@ -48,7 +48,7 @@ class AppRouter {
       GoRoute(
         path: '/admin',
         name: 'admin',
-        builder: (context, state) => const AdminLoginPage(),
+        builder: (context, state) => const AdminDashboardPage(),
       ),
       GoRoute(
         path: '/events',
