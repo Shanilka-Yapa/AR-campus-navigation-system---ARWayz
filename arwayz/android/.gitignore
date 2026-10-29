@@ -12,3 +12,12 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Exception: the shared DEBUG keystore is committed on purpose so every
+# developer's build is signed with the same certificate. Its SHA-1 is the one
+# registered against the Firebase Android API key, so a fresh clone can sign
+# in without each person registering their own fingerprint.
+#
+# This is safe: a debug keystore is not a secret (its password is the public
+# default "android") and it must never be used to sign a release build.
+!/debug.keystore
